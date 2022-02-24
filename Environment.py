@@ -132,3 +132,34 @@ class EscapeRoomEnvironment:
                 r_str += lut[r[i, j]]
             r_str += "\n"
         return r_str
+
+    def env_step(self, action):
+
+        if action == 0:  # UP
+            possible_next_loc = (self.agent_loc[0] - 1, self.agent_loc[1])
+        elif action == 1:  # LEFT
+            possible_next_loc = (self.agent_loc[0], self.agent_loc[1] - 1)
+        elif action == 2:  # DOWN
+            possible_next_loc = (self.agent_loc[0] + 1, self.agent_loc[1])
+        elif action == 3:  # RIGHT
+            possible_next_loc = (self.agent_loc[0], self.agent_loc[1] + 1)
+        else:
+            raise Exception(
+                str(action) + " not in recognized actions [0: Up, 1: Left, 2: Down, 3: Right]!"
+            )
+
+        reward = -1
+        terminal = False
+
+        if possible_next_loc not in self.forbidden_locs:
+            self.agent_loc = possible_next_loc
+            if self.agent_loc == self.goal_loc and self.got_key:
+                reward = 10
+                terminal = True
+            elif self.agent_loc == self.key_loc and not self.got_key:
+                self.got_key = True
+                reward = 1
+
+        state = (*self.agent_loc, self.got_key)
+        self.reward_state_term = (reward, state, terminal)
+        return self.reward_state_term
