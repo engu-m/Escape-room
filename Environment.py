@@ -18,32 +18,24 @@ class EscapeRoomEnvironment:
             Initialize a tuple with the reward, first state, boolean
             indicating if it's terminal.
         """
-
-        # Note, we can setup the following variables later, in env_start() as it is equivalent.
-        # Code is left here to adhere to the note above, but these variables are initialized once more
-        # in env_start() [See the env_start() function below.]
-
         reward = None
         state = None  # See Aside
         termination = None
         self.reward_state_term = (reward, state, termination)
 
-        # AN ASIDE: Observation is a general term used in the RL-Glue files that can be interachangeably
-        # used with the term "state" for our purposes and for this assignment in particular.
-        # A difference arises in the use of the terms when we have what is called Partial Observability where
-        # the environment may return states that may not fully represent all the information needed to
-        # predict values or make decisions (i.e., the environment is non-Markovian.)
+        # for render purpose only
+        self.agent_last_action = None
 
         self.grid_h = env_info.get("grid_height", 5)
         self.grid_w = env_info.get("grid_width", 5)
         self.grid_shape = (self.grid_h, self.grid_w)
 
+        # The start is in the middle of the bottom row of the room
         self.start_loc = (self.grid_h - 1, self.grid_w // 2)
-        # Goal location is the bottom-right corner. (max x, max y).
+        # The door is in the middle of the top row of the room
         self.goal_loc = (0, self.grid_w // 2)
-        # The door is in the middle of the top line of the room
-        self.obstacle_loc = (self.goal_loc[0] + 1, self.goal_loc[1])
         # There is an obstacle in front of the door
+        self.obstacle_loc = (self.goal_loc[0] + 1, self.goal_loc[1])
 
         # map bounds
         self.UP_map_bound = [(-1, y) for y in range(-1, self.grid_w + 1)]
@@ -57,9 +49,12 @@ class EscapeRoomEnvironment:
             + self.LEFT_map_bound
             + [self.obstacle_loc]
         )
-        self.forbidden_locs = list(set(self.forbidden_locs))
-
+        self.forbidden_locs = list(set(self.forbidden_locs))  # render all locs unique
+        # The key is in the bottom right corner
         self.key_loc = (self.grid_h - 1, self.grid_w - 1)
+        # The player does not have the key in the beginning
+        self.got_key = False
+
         assert (
             self.key_loc not in self.forbidden_locs
         ), "key location init is forbidden, try another location"
@@ -69,9 +64,6 @@ class EscapeRoomEnvironment:
         assert (
             self.goal_loc not in self.forbidden_locs
         ), "goal location init is forbidden, try another location"
-        # The key is in the bottom right corner
-        self.got_key = False
-        # The player does not have the key in the beginning
 
     def start(self):
         """The first method called when the episode starts, called before the
@@ -91,23 +83,19 @@ class EscapeRoomEnvironment:
         return self.reward_state_term[1]
 
     def render(self):
-        """render the current state to terminal
-        0 : background (' ')
-        1 : player ('P')
-        2 : door ('D')
-        3 : key ('K')
-        4 : left/right wall ('|')
-        5 : top/bottom wall ('-')
-        6 : obstacle ('X')
-        """
+        """render the current state to terminal"""
         lut = {
             0: " ",
-            1: gym.utils.colorize("P", "blue"),
-            2: gym.utils.colorize("D", "green"),
-            3: gym.utils.colorize("K", "yellow"),
-            4: "|",
-            5: "-",
-            6: gym.utils.colorize("X", "red"),
+            1: gym.utils.colorize("P", "blue"),  # player
+            2: gym.utils.colorize("D", "green"),  # door
+            3: gym.utils.colorize("K", "yellow"),  # key
+            4: "|",  # wall left/right
+            5: "-",  # wall up/down
+            6: gym.utils.colorize("X", "red"),  # obstacles
+            7: gym.utils.colorize("↑", "blue"),  # player up
+            8: gym.utils.colorize("←", "blue"),  # player left
+            9: gym.utils.colorize("↓", "blue"),  # player down
+            10: gym.utils.colorize("→", "blue"),  # player right
         }
 
         r = np.zeros(self.grid_shape, dtype="int8")
@@ -121,11 +109,16 @@ class EscapeRoomEnvironment:
 
         if agent_state is not None:
             agent_loc = agent_state[:2]
-        r[agent_loc] = 1
+            if self.agent_last_action is not None:
+                r[agent_loc] = self.agent_last_action + 7  # up -> 7, left -> 8, etc.
+            else:
+                r[agent_loc] = 1  # default when no movement
 
-        r = np.pad(r, 1, mode="constant", constant_values=4)
-        r[0][:] = 5
-        r[-1][:] = 5
+        r = np.pad(
+            r, 1, mode="constant", constant_values=4
+        )  # left/right walls everywhere outside the room
+        r[0][:] = 5  # top wall
+        r[-1][:] = 5  # bottom wall
         r_str = ""
         for i in range(r.shape[0]):
             for j in range(r.shape[1]):
@@ -162,4 +155,5 @@ class EscapeRoomEnvironment:
 
         state = (*self.agent_loc, self.got_key)
         self.reward_state_term = (reward, state, terminal)
+        self.agent_last_action = action
         return self.reward_state_term

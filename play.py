@@ -2,8 +2,6 @@
 
 import os
 import sys
-import time
-import numpy as np
 import keyboard
 
 from Environment import EscapeRoomEnvironment
@@ -26,7 +24,6 @@ while True:
     if event.event_type == keyboard.KEY_DOWN and event.name in key_to_action.keys():
         action = key_to_action[event.name]
         reward, state, term = env.step(action)
-        time.sleep(0.1)
         if term:
             # render final frame
             sys.stdout.write(env.render())
