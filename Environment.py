@@ -73,7 +73,7 @@ class EscapeRoomEnvironment:
         self.got_key = False
         # The player does not have the key in the beginning
 
-    def env_start(self):
+    def start(self):
         """The first method called when the episode starts, called before the
         agent starts.
 
@@ -90,7 +90,7 @@ class EscapeRoomEnvironment:
 
         return self.reward_state_term[1]
 
-    def env_render(self):
+    def render(self):
         """render the current state to terminal
         0 : background (' ')
         1 : player ('P')
@@ -133,7 +133,7 @@ class EscapeRoomEnvironment:
             r_str += "\n"
         return r_str
 
-    def env_step(self, action):
+    def step(self, action):
 
         if action == 0:  # UP
             possible_next_loc = (self.agent_loc[0] - 1, self.agent_loc[1])

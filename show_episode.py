@@ -14,7 +14,7 @@ init_params = {
 }
 
 env = EscapeRoomEnvironment(env_info=init_params)
-env.env_start()
+env.start()
 
 agent_info = {
     "policy": 1 / 4 * np.ones((init_params["grid_height"], init_params["grid_width"], 2, 4)),
@@ -29,9 +29,9 @@ agent_info = {
 while True:
     # Render the game
     action = np.random.randint(0, 4)
-    reward, state, term = env.env_step(action)
+    reward, state, term = env.step(action)
     os.system("cls")
-    sys.stdout.write(env.env_render())
+    sys.stdout.write(env.render())
 
     time.sleep(0.1)
     if term:
