@@ -31,10 +31,10 @@ agent_info = {
     "seed": 3,
 }
 
-agent = QLearningAgent(agent_init_info=agent_info)
-# agent = ExpectedSarsa(agent_init_info=agent_info)
+# agent = QLearningAgent(agent_init_info=agent_info)
+agent = ExpectedSarsa(agent_init_info=agent_info)
 num_runs = 10000
-show_n_last_runs = 0
+show_n_last_runs = 10
 
 for run in tqdm(range(num_runs)):
     reward, state, term = env.start()
@@ -45,7 +45,7 @@ for run in tqdm(range(num_runs)):
             # Render the game
             os.system("cls")
             sys.stdout.write(env.render())
-            time.sleep(0.05)
+            time.sleep(0.1)
 
         reward, state, term = env.step(action)
         action = agent.agent_step(reward, state)
@@ -58,9 +58,6 @@ for action in range(4):
     for got_key in range(2):
         ax[got_key, action].imshow(agent.q[:, :, got_key, action])
         ax[got_key, action].set_title(f"Action {action_to_emoji[action]}" + got_key * ", got_key")
-
-# cbar0 = plt.colorbar()
-# cbar1 = plt.colorbar(im1)
 
 # fig.tight_layout()
 plt.show()
