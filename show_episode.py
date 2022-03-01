@@ -62,6 +62,7 @@ for run in tqdm(range(num_runs)):
         if term:
             break
 
-plot_params = {"save": True, "show": False}
+plot_params = {"save": True, "show": True}
+viz.best_action_per_state(agent.q, num_runs, **plot_params)
 viz.plot_q_value_estimation(agent.q, num_runs, **plot_params)
 viz.plot_n_last_visits(all_state_visits, num_runs, **plot_params)
