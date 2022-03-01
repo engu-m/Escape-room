@@ -31,7 +31,7 @@ class BaseAgent:
         # num_states_x (height), num_states_y (width), got_key or not (2), num_actions (4)
         self.q = np.zeros((*self.tuple_state, 2, self.num_actions))
 
-    def agent_start(self, state):
+    def agent_start(self, state, seed):
         """The first method called when the episode starts, called after
         the environment starts.
         Args:
@@ -49,6 +49,7 @@ class BaseAgent:
             action = self.argmax(current_q)  # greedy action selection
         self.prev_state = state
         self.prev_action = action
+        self.rand_generator = np.random.RandomState(seed)
         return action
 
     def agent_end(self, reward):

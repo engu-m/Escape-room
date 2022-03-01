@@ -5,6 +5,7 @@ import sys
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from Environment import EscapeRoomEnvironment
 from agent import QLearningAgent, ExpectedSarsa
@@ -31,12 +32,13 @@ agent_info = {
 }
 
 agent = QLearningAgent(agent_init_info=agent_info)
+# agent = ExpectedSarsa(agent_init_info=agent_info)
 num_runs = 10000
 show_n_last_runs = 0
 
-for run in range(num_runs):
+for run in tqdm(range(num_runs)):
     reward, state, term = env.start()
-    action = agent.agent_start((*env.start_loc, 0))
+    action = agent.agent_start((*env.start_loc, 0), seed=run)
     # iterate
     while True:
         if run > num_runs - show_n_last_runs:
