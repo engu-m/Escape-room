@@ -53,7 +53,7 @@ class EscapeRoomEnvironment:
         # The key is in the bottom right corner
         self.key_loc = (self.grid_h - 1, self.grid_w - 1)
         # The player does not have the key in the beginning
-        self.got_key = False
+        self.got_key = 0
 
         assert (
             self.key_loc not in self.forbidden_locs
@@ -73,6 +73,7 @@ class EscapeRoomEnvironment:
             The first state from the environment.
         """
         reward = 0
+        self.got_key = 0  # take the key from the player
         # agent_loc will hold the current location of the agent
         self.agent_loc = self.start_loc
         # state is the one dimensional state representation of the agent location.
@@ -80,7 +81,7 @@ class EscapeRoomEnvironment:
         termination = False
         self.reward_state_term = (reward, state, termination)
 
-        return self.reward_state_term[1]
+        return self.reward_state_term
 
     def render(self):
         """render the current state to terminal"""
@@ -101,7 +102,7 @@ class EscapeRoomEnvironment:
         r = np.zeros(self.grid_shape, dtype="int8")
 
         r[self.goal_loc] = 2  # door
-        if not self.got_key:
+        if self.got_key == 0:
             r[self.key_loc] = 3  # key
         r[self.obstacle_loc] = 6
 
@@ -146,11 +147,11 @@ class EscapeRoomEnvironment:
 
         if possible_next_loc not in self.forbidden_locs:
             self.agent_loc = possible_next_loc
-            if self.agent_loc == self.goal_loc and self.got_key:
+            if self.agent_loc == self.goal_loc and self.got_key == 1:
                 reward = 10
                 terminal = True
-            elif self.agent_loc == self.key_loc and not self.got_key:
-                self.got_key = True
+            elif self.agent_loc == self.key_loc and self.got_key == 0:
+                self.got_key = 1
                 reward = 1
 
         state = (*self.agent_loc, self.got_key)

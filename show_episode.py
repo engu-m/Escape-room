@@ -4,35 +4,63 @@ import os
 import sys
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 from Environment import EscapeRoomEnvironment
-from TDagent import TDAgent
+from TDagent import QLearningAgent, ExpectedSarsa
 
 init_params = {
-    "grid_width": 6,
-    "grid_height": 8,
+    "grid_width": 4,
+    "grid_height": 5,
 }
 
 env = EscapeRoomEnvironment(env_info=init_params)
-env.start()
+
+key_to_action = {"haut": 0, "gauche": 1, "bas": 2, "droite": 3}
+action_to_key = {0: "haut", 1: "gauche", 2: "bas", 3: "droite"}
+action_to_emoji = {0: "↑", 1: "←", 2: "↓", 3: "→"}
+
 
 agent_info = {
-    "policy": 1 / 4 * np.ones((init_params["grid_height"], init_params["grid_width"], 2, 4)),
+    "num_actions": 4,
+    "epsilon": 0.1,
+    "tuple_state": (init_params["grid_height"], init_params["grid_width"]),
     "discount": 1,
     "step_size": 0.8,
+    "seed": 3,
 }
 
-# agent = TDAgent(agent_info=agent_info)
+agent = QLearningAgent(agent_init_info=agent_info)
+num_runs = 10000
+show_n_last_runs = 0
 
+for run in range(num_runs):
+    reward, state, term = env.start()
+    action = agent.agent_start((*env.start_loc, 0))
+    # iterate
+    while True:
+        if run > num_runs - show_n_last_runs:
+            # Render the game
+            os.system("cls")
+            sys.stdout.write(env.render())
+            time.sleep(0.05)
 
-# iterate
-while True:
-    # Render the game
-    action = np.random.randint(0, 4)
-    reward, state, term = env.step(action)
-    os.system("cls")
-    sys.stdout.write(env.render())
+        reward, state, term = env.step(action)
+        action = agent.agent_step(reward, state)
 
-    time.sleep(0.1)
-    if term:
-        break
+        if term:
+            break
+
+fig, ax = plt.subplots(2, 4)
+for action in range(4):
+    for got_key in range(2):
+        ax[got_key, action].imshow(agent.q[:, :, got_key, action])
+        ax[got_key, action].set_title(f"Action {action_to_emoji[action]}" + got_key * ", got_key")
+
+# cbar0 = plt.colorbar()
+# cbar1 = plt.colorbar(im1)
+
+# fig.tight_layout()
+plt.show()
+
+print("done")
