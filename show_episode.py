@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from Environment import EscapeRoomEnvironment
-from TDagent import QLearningAgent, ExpectedSarsa
+from agent import QLearningAgent, ExpectedSarsa
 
 init_params = {
     "grid_width": 4,
