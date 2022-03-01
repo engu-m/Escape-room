@@ -36,27 +36,19 @@ def plot_q_value_estimation(q_value, n_runs, save=True, show=False):
 
 def best_action_per_state(q_value, n_runs, save=True, show=False):
     fig, ax = plt.subplots(1, 2)
-    textcolors = ("black", "white")
     # process best value arrays
     best_action_value = np.max(q_value, axis=-1)
     worst_action_value = np.min(q_value, axis=-1)
     scaled_q_value = q_value - worst_action_value[:, :, :, None]
     normalization_vector = np.clip(scaled_q_value.sum(axis=-1), a_min=1e-4, a_max=None)
-    best_action_weight = (best_action_value - worst_action_value) / (
-        normalization_vector
-    )  # scale values to be only positive numbers and then compute weight
     all_action_weight = (
         scaled_q_value / normalization_vector[:, :, :, None]
     )  # scale values to be only positive numbers and then compute weight
-    all_action_emoji = np.vectorize(action_to_emoji.get)(q_value)
-    best_action_int = np.apply_along_axis(np.argmax, -1, q_value)
-    best_action_emoji = np.vectorize(action_to_emoji.get)(best_action_int)
 
     # plot both state value map (key or not key)
     for got_key in range(2):
         # plot heatmap
         heatmap_to_plot = best_action_value[:, :, got_key]
-        median = np.median(heatmap_to_plot)
         ax[got_key].imshow(heatmap_to_plot, cmap=cmap)
 
         # title and ticks
@@ -66,8 +58,6 @@ def best_action_per_state(q_value, n_runs, save=True, show=False):
 
         for x, all_action_x_weight in enumerate(all_action_weight[:, :, got_key]):
             for y, weight_action in enumerate(all_action_x_weight):
-                arrow_color = textcolors[heatmap_to_plot[x, y] < median]
-                arrow_border_color = textcolors[1 - (heatmap_to_plot[x, y] < median)]
                 for action, weight in enumerate(weight_action):
                     txt = ax[got_key].text(
                         y,
