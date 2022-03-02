@@ -103,11 +103,11 @@ run_parameters = {
     "n_last_run_visit": n_last_run_visit,
     "viz_results": True,
     "viz_params": {
-        "save": True,
-        "show": False,
+        "save": False,
+        "show": True,
         "cmap": "magma",
         "max_fontsize": 40,
-        "block_show": True,
+        "block_show": False,
     },
 }
 

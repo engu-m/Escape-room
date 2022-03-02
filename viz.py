@@ -12,6 +12,7 @@ action_to_text = {0: "haut", 1: "gauche", 2: "bas", 3: "droite"}
 action_to_horizontal_alignment = {0: "center", 1: "right", 2: "center", 3: "left"}
 action_to_vertical_alignment = {0: "bottom", 1: "center", 2: "top", 3: "center"}
 
+
 # decorator to wrap around every function
 def save_and_show():
     def outer(func):
@@ -22,6 +23,7 @@ def save_and_show():
                 plt.savefig(save_path, bbox_inches="tight", transparent=True)
             if viz_args.get("show", False):
                 plt.show(block=viz_args.get("block_show", False))
+                plt.pause(1)
 
         return inner
 
