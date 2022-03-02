@@ -115,12 +115,12 @@ def plot_n_extreme_visits(
 @save_and_show()
 def plot_n_first_visits(all_state_visits, n_runs, save=True, show=False, save_directory=None):
     return plot_n_extreme_visits(
-        all_state_visits, n_runs, save, show, "first", save_directory=save_directory
+        all_state_visits, n_runs, "first", save, show, save_directory=save_directory
     )
 
 
 @save_and_show()
 def plot_n_last_visits(all_state_visits, n_runs, save=True, show=False, save_directory=None):
     return plot_n_extreme_visits(
-        all_state_visits, n_runs, save, show, "last", save_directory=save_directory
+        all_state_visits, n_runs, "last", save, show, save_directory=save_directory
     )
