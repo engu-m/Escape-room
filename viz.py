@@ -1,11 +1,12 @@
 """module for visualizing results of runs/episodes"""
 
-from unicodedata import normalize
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as PathEffects
 from pathlib import Path
 
+key_to_action = {"haut": 0, "gauche": 1, "bas": 2, "droite": 3}
+action_to_key = {0: "haut", 1: "gauche", 2: "bas", 3: "droite"}
 action_to_emoji = {0: "↑", 1: "←", 2: "↓", 3: "→"}
 action_to_text = {0: "haut", 1: "gauche", 2: "bas", 3: "droite"}
 action_to_horizontal_alignment = {0: "center", 1: "right", 2: "center", 3: "left"}
@@ -14,11 +15,24 @@ action_to_vertical_alignment = {0: "bottom", 1: "center", 2: "top", 3: "center"}
 cmap = "magma"
 max_fontsize = 45
 
-save_dir = Path("Escape-Room-RL/viz")
-save_dir.mkdir(exist_ok=True)
+# decorator to wrap around every function
+def save_and_show():
+    def outer(func):
+        def inner(*args, **kwargs):
+            figtitle = func(*args, **kwargs)
+            if kwargs.get("save", False):
+                save_path = str(kwargs.get("save_directory", "./") / figtitle)
+                plt.savefig(save_path, bbox_inches="tight", transparent=True)
+            if kwargs.get("show", False):
+                plt.show(block=False)
+
+        return inner
+
+    return outer
 
 
-def plot_q_value_estimation(q_value, n_runs, save=True, show=False):
+@save_and_show()
+def plot_q_value_estimation(q_value, n_runs, save=True, show=False, save_directory=None):
     fig, ax = plt.subplots(2, 4)
     for action in range(4):
         for got_key in range(2):
@@ -28,13 +42,11 @@ def plot_q_value_estimation(q_value, n_runs, save=True, show=False):
             ax[got_key, action].set_yticks([])
     fig.suptitle(f"Q value estimation after {n_runs} runs")
     fig.tight_layout()
-    if save:
-        plt.savefig(save_dir / f"Q value estimation after {n_runs}")
-    if show:
-        plt.show()
+    return f"Q value estimation after {n_runs}"
 
 
-def best_action_per_state(q_value, n_runs, save=True, show=False):
+@save_and_show()
+def plot_best_action_per_state(q_value, n_runs, save=True, show=False, save_directory=None):
     fig, ax = plt.subplots(1, 2)
     # process best value arrays
     best_action_value = np.max(q_value, axis=-1)
@@ -66,19 +78,18 @@ def best_action_per_state(q_value, n_runs, save=True, show=False):
                         ha=action_to_horizontal_alignment[action],
                         va=action_to_vertical_alignment[action],
                         color="white",
-                        fontsize=max_fontsize * (weight),  # 0.25 is the minimum
-                    )  # this means that perfectly random choices will have an
+                        fontsize=max_fontsize * (weight),
+                    )
                     txt.set_path_effects([PathEffects.withStroke(linewidth=1, foreground="black")])
 
-    fig.suptitle(f"Q value best actions after {n_runs} runs")
-    fig.tight_layout()
-    if save:
-        plt.savefig(save_dir / f"Q value best actions after {n_runs} runs")
-    if show:
-        plt.show()
+    figtitle = f"Q value best actions after {n_runs} runs"
+    fig.suptitle(figtitle)
+    return figtitle
 
 
-def plot_n_extreme_visits(all_state_visits, n_runs, save=True, show=False, first_or_last="last"):
+def plot_n_extreme_visits(
+    all_state_visits, n_runs, first_or_last="last", save=True, show=False, save_directory=None
+):
     average_state_visits = all_state_visits.sum(axis=(0, -1))
     average_state_visits = average_state_visits[
         ::-1, :
@@ -97,19 +108,19 @@ def plot_n_extreme_visits(all_state_visits, n_runs, save=True, show=False, first
     plt.subplots_adjust(bottom=0.05, top=0.8, right=0.75, left=0.05)
     cax = plt.axes([0.82, 0.05, 0.075, 0.75])
     cbar = plt.colorbar(cax=cax)
-    # plt.tight_layout()
-    if save:
-        plt.savefig(
-            save_dir
-            / f"{all_state_visits.shape[0]} {first_or_last} episode visits out of {n_runs} runs.png"
-        )
-    if show:
-        plt.show()
+
+    return f"{all_state_visits.shape[0]} {first_or_last} episode visits out of {n_runs} runs"
 
 
-def plot_n_first_visits(all_state_visits, n_runs, save=True, show=False):
-    plot_n_extreme_visits(all_state_visits, n_runs, save, show, "first")
+@save_and_show()
+def plot_n_first_visits(all_state_visits, n_runs, save=True, show=False, save_directory=None):
+    return plot_n_extreme_visits(
+        all_state_visits, n_runs, save, show, "first", save_directory=save_directory
+    )
 
 
-def plot_n_last_visits(all_state_visits, n_runs, save=True, show=False):
-    plot_n_extreme_visits(all_state_visits, n_runs, save, show, "last")
+@save_and_show()
+def plot_n_last_visits(all_state_visits, n_runs, save=True, show=False, save_directory=None):
+    return plot_n_extreme_visits(
+        all_state_visits, n_runs, save, show, "last", save_directory=save_directory
+    )
