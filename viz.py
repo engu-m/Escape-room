@@ -12,19 +12,16 @@ action_to_text = {0: "haut", 1: "gauche", 2: "bas", 3: "droite"}
 action_to_horizontal_alignment = {0: "center", 1: "right", 2: "center", 3: "left"}
 action_to_vertical_alignment = {0: "bottom", 1: "center", 2: "top", 3: "center"}
 
-cmap = "magma"
-max_fontsize = 45
-
 # decorator to wrap around every function
 def save_and_show():
     def outer(func):
-        def inner(*args, **kwargs):
-            figtitle = func(*args, **kwargs)
-            if kwargs.get("save", False):
-                save_path = str(kwargs.get("save_directory", "./") / figtitle)
+        def inner(*args, **viz_args):
+            figtitle = func(*args, **viz_args)
+            if viz_args.get("save", False):
+                save_path = str(viz_args.get("save_directory", "./") / figtitle)
                 plt.savefig(save_path, bbox_inches="tight", transparent=True)
-            if kwargs.get("show", False):
-                plt.show(block=False)
+            if viz_args.get("show", False):
+                plt.show(block=viz_args.get("block_show", False))
 
         return inner
 
@@ -32,11 +29,13 @@ def save_and_show():
 
 
 @save_and_show()
-def plot_q_value_estimation(q_value, n_runs, save=True, show=False, save_directory=None):
+def plot_q_value_estimation(q_value, n_runs, **viz_args):
     fig, ax = plt.subplots(2, 4)
     for action in range(4):
         for got_key in range(2):
-            ax[got_key, action].imshow(q_value[:, :, got_key, action], cmap=cmap)
+            ax[got_key, action].imshow(
+                q_value[:, :, got_key, action], cmap=viz_args.get("cmap", "viridis")
+            )
             ax[got_key, action].set_title(f"{action_to_emoji[action]}" + got_key * " - got_key")
             ax[got_key, action].set_xticks([])
             ax[got_key, action].set_yticks([])
@@ -46,7 +45,7 @@ def plot_q_value_estimation(q_value, n_runs, save=True, show=False, save_directo
 
 
 @save_and_show()
-def plot_best_action_per_state(q_value, n_runs, save=True, show=False, save_directory=None):
+def plot_best_action_per_state(q_value, n_runs, **viz_args):
     fig, ax = plt.subplots(1, 2)
     # process best value arrays
     best_action_value = np.max(q_value, axis=-1)
@@ -61,7 +60,7 @@ def plot_best_action_per_state(q_value, n_runs, save=True, show=False, save_dire
     for got_key in range(2):
         # plot heatmap
         heatmap_to_plot = best_action_value[:, :, got_key]
-        ax[got_key].imshow(heatmap_to_plot, cmap=cmap)
+        ax[got_key].imshow(heatmap_to_plot, cmap=viz_args.get("cmap", "viridis"))
 
         # title and ticks
         ax[got_key].set_title(got_key * "got_key")
@@ -78,7 +77,7 @@ def plot_best_action_per_state(q_value, n_runs, save=True, show=False, save_dire
                         ha=action_to_horizontal_alignment[action],
                         va=action_to_vertical_alignment[action],
                         color="white",
-                        fontsize=max_fontsize * (weight),
+                        fontsize=viz_args.get("max_fontsize", 40) * (weight),
                     )
                     txt.set_path_effects([PathEffects.withStroke(linewidth=1, foreground="black")])
 
@@ -87,9 +86,7 @@ def plot_best_action_per_state(q_value, n_runs, save=True, show=False, save_dire
     return figtitle
 
 
-def plot_n_extreme_visits(
-    all_state_visits, n_runs, first_or_last="last", save=True, show=False, save_directory=None
-):
+def plot_n_extreme_visits(all_state_visits, n_runs, first_or_last="last", **viz_args):
     average_state_visits = all_state_visits.sum(axis=(0, -1))
     average_state_visits = average_state_visits[
         ::-1, :
@@ -98,7 +95,9 @@ def plot_n_extreme_visits(
     figsize = average_state_visits.shape[::-1]
     figsize = (figsize[0], figsize[1] + 2)
     fig, ax = plt.subplots(figsize=figsize)
-    plt.pcolormesh(average_state_visits, edgecolors="gray", linewidth=2, cmap=cmap)
+    plt.pcolormesh(
+        average_state_visits, edgecolors="gray", linewidth=2, cmap=viz_args.get("cmap", "viridis")
+    )
     plt.title(
         f"Visits during\n the {first_or_last} {all_state_visits.shape[0]}\n episodes ({n_runs} runs)"
     )
@@ -113,14 +112,10 @@ def plot_n_extreme_visits(
 
 
 @save_and_show()
-def plot_n_first_visits(all_state_visits, n_runs, save=True, show=False, save_directory=None):
-    return plot_n_extreme_visits(
-        all_state_visits, n_runs, "first", save, show, save_directory=save_directory
-    )
+def plot_n_first_visits(all_state_visits, n_runs, **viz_args):
+    return plot_n_extreme_visits(all_state_visits, n_runs, "first", **viz_args)
 
 
 @save_and_show()
-def plot_n_last_visits(all_state_visits, n_runs, save=True, show=False, save_directory=None):
-    return plot_n_extreme_visits(
-        all_state_visits, n_runs, "last", save, show, save_directory=save_directory
-    )
+def plot_n_last_visits(all_state_visits, n_runs, **viz_args):
+    return plot_n_extreme_visits(all_state_visits, n_runs, "last", **viz_args)

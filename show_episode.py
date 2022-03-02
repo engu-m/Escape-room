@@ -33,7 +33,7 @@ agents = {
     "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
 }
 
-num_runs = 500
+num_runs = 5000
 runs_nb_to_show = range(10)  # show 10 first runs
 runs_nb_to_show = range(num_runs - 10, num_runs)  # show 10 last runs
 runs_nb_to_show = [
@@ -62,7 +62,7 @@ def run(agent_name, agent, env, **run_parameters):
         (n_first_run_visit, env_params["grid_height"], env_params["grid_width"], 2)
     )
 
-    for run in range(num_runs):
+    for run in tqdm(range(num_runs)):
         reward, state, term = env.start()
         action = agent.agent_start((*env.start_loc, 0), seed=run)
         # iterate
@@ -102,10 +102,15 @@ if __name__ == "__main__":
         "n_first_run_visit": n_first_run_visit,
         "n_last_run_visit": n_last_run_visit,
         "viz_results": True,
-        "viz_params": {"save": True, "show": True},
+        "viz_params": {
+            "save": True,
+            "show": False,
+            "cmap": "magma",
+            "max_fontsize": 40,
+            "block_show": True,
+        },
     }
 
-    agent_name = "ExpectedSarsa"
-    agent = agents["ExpectedSarsa"]
-    env = EscapeRoomEnvironment(env_info=env_params)
-    run(agent_name, agent, env, **run_parameters)
+    for agent_name, agent in agents.items():
+        env = EscapeRoomEnvironment(env_info=env_params)
+        run(agent_name, agent, env, **run_parameters)
