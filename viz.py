@@ -31,6 +31,29 @@ def save_and_show():
 
 
 @save_and_show()
+def plot_one_agent_reward(all_run_rewards, agent_name, **viz_args):
+    figtitle = f"Reward for agent {agent_name}"
+    plt.plot(all_run_rewards, label=agent_name)
+    plt.title(f"Reward for agent {agent_name}")
+    plt.ylim(-100, 30)
+    plt.tight_layout()
+    plt.legend()
+    return figtitle
+
+
+@save_and_show()
+def plot_mutliple_agents_reward(dict_all_run_rewards, **viz_args):
+    for agent_name, all_run_rewards in dict_all_run_rewards.items():
+        plt.plot(all_run_rewards, label=agent_name)
+    figtitle = f"Reward for agents {', '.join(dict_all_run_rewards.keys())}"
+    plt.title(figtitle)
+    plt.ylim(-100, 30)
+    plt.tight_layout()
+    plt.legend()
+    return figtitle
+
+
+@save_and_show()
 def plot_q_value_estimation(q_value, n_runs, **viz_args):
     fig, ax = plt.subplots(2, 4)
     for action in range(4):

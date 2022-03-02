@@ -6,6 +6,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 from Environment import EscapeRoomEnvironment
 from agent import QLearningAgent, ExpectedSarsa
@@ -27,10 +28,11 @@ def run(agent_name, agent, env, **run_parameters):
     first_state_visits = np.zeros(
         (n_first_run_visit, env_params["grid_height"], env_params["grid_width"], 2)
     )
-
+    all_run_rewards = []
     for run in tqdm(range(num_runs)):
         reward, state, term = env.start()
         action = agent.agent_start((*env.start_loc, 0), seed=run)
+        run_reward = reward
         # iterate
         while True:
             if run in runs_nb_to_show:
@@ -41,6 +43,7 @@ def run(agent_name, agent, env, **run_parameters):
             # step in env and agent
             reward, state, term = env.step(action)
             action = agent.agent_step(reward, state)
+            run_reward += reward
 
             # track visits if necessary
             if run < n_first_run_visit:
@@ -49,15 +52,21 @@ def run(agent_name, agent, env, **run_parameters):
                 last_state_visits[(run - (num_runs - n_last_run_visit), *state)] += 1
 
             if term:
+                all_run_rewards.append(run_reward)
                 break
 
     if viz_results:
         save_dir = Path("Escape-Room-RL/viz") / agent_name
         save_dir.mkdir(exist_ok=True, parents=True)
+        viz.plot_one_agent_reward(
+            all_run_rewards, agent_name, save_directory=save_dir, **viz_params
+        )
         viz.plot_best_action_per_state(agent.q, num_runs, save_directory=save_dir, **viz_params)
         viz.plot_n_first_visits(first_state_visits, num_runs, save_directory=save_dir, **viz_params)
         viz.plot_n_last_visits(last_state_visits, num_runs, save_directory=save_dir, **viz_params)
         viz.plot_q_value_estimation(agent.q, num_runs, save_directory=save_dir, **viz_params)
+
+    return all_run_rewards
 
 
 env_params = {
@@ -82,7 +91,7 @@ agents = {
     "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
 }
 
-num_runs = 5000
+num_runs = 200
 runs_nb_to_show = range(10)  # show 10 first runs
 runs_nb_to_show = range(num_runs - 10, num_runs)  # show 10 last runs
 runs_nb_to_show = [
@@ -104,13 +113,23 @@ run_parameters = {
     "viz_results": True,
     "viz_params": {
         "save": False,
-        "show": True,
+        "show": False,
         "cmap": "magma",
         "max_fontsize": 40,
-        "block_show": False,
+        "block_show": True,
     },
 }
 
+dict_all_run_rewards = {}
 for agent_name, agent in agents.items():
     env = EscapeRoomEnvironment(env_info=env_params)
-    run(agent_name, agent, env, **run_parameters)
+    all_run_rewards = run(agent_name, agent, env, **run_parameters)
+    dict_all_run_rewards[agent_name] = all_run_rewards
+save_dir = Path("Escape-Room-RL/viz")
+save_dir.mkdir(exist_ok=True, parents=True)
+
+
+plt.close("all")
+custom_viz_params = run_parameters["viz_params"]
+custom_viz_params["save"] = True
+viz.plot_mutliple_agents_reward(dict_all_run_rewards, save_directory=save_dir, **custom_viz_params)
