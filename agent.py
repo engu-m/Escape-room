@@ -1,8 +1,6 @@
 """Agents for EscapeRoom"""
 import numpy as np
 
-import numpy as np
-
 
 class BaseAgent:
     def __init__(self, agent_init_info) -> None:
