@@ -9,144 +9,144 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from Environment import EscapeRoomEnvironment
-from agent import QLearningAgent, ExpectedSarsa
-from rooms import rooms
+from constants import *
 import viz
 
 
-def run(agent_name, agent, env, **run_parameters):
-    num_runs = run_parameters["num_runs"]
-    runs_nb_to_show = run_parameters["runs_nb_to_show"]
-    fps = run_parameters["fps"]
-    n_first_run_visit = run_parameters["n_first_run_visit"]
-    n_last_run_visit = run_parameters["n_last_run_visit"]
-    viz_results = run_parameters["viz_results"]
-    viz_params = run_parameters["viz_params"]
+def render_frame(
+    env, agent_name, run_ratio, episode_ratio, all_actions, episode_reward, fps, terminal
+):
+    """render given frame to terminal"""
+    os.system("cls")
+    frame = env.render(
+        # f"{all_actions}",
+        f"reward : {episode_reward}",
+        f"room : {env.room_nb} - {env.room_name}",
+        f"run : {run_ratio}",
+        f"episode : {episode_ratio}",
+        agent_name,
+    )
+    sys.stdout.write(frame)
+    time.sleep(fps)
+    if terminal:
+        time.sleep(4 * fps)
+    return frame
+
+
+def episode(agent_name, agent, env, run_ratio, **episode_parameters):
+    """run an episode for the agent in one env/room"""
+    num_episodes = episode_parameters["num_episodes"]
+    episodes_nb_to_show = episode_parameters["episodes_nb_to_show"]
+    fps = episode_parameters["fps"]
+    n_first_episode_visit = episode_parameters["n_first_episode_visit"]
+    n_last_episode_visit = episode_parameters["n_last_episode_visit"]
+    viz_results = episode_parameters["viz_results"]
+    viz_params = episode_parameters["viz_params"]
 
     last_state_visits = np.zeros(
-        (n_last_run_visit, env_params["grid_height"], env_params["grid_width"], 2)
+        (n_last_episode_visit, env_params["grid_height"], env_params["grid_width"], 2)
     )
     first_state_visits = np.zeros(
-        (n_first_run_visit, env_params["grid_height"], env_params["grid_width"], 2)
+        (n_first_episode_visit, env_params["grid_height"], env_params["grid_width"], 2)
     )
-    all_run_rewards = []
-    for run in tqdm(range(num_runs)):
+    all_episode_rewards = []
+    for episode in tqdm(range(num_episodes)):
         reward, state, term = env.start()
-        action = agent.agent_start((*env.start_loc, 0), seed=run)
+        action = agent.agent_start((*env.start_loc, 0), seed=episode)
         all_actions = ""
-        run_reward = reward
+        all_frames = []
+        episode_reward = reward
         # iterate
         while True:
-            if run in runs_nb_to_show:
+            if episode in episodes_nb_to_show:
+                # render epsiode to terminal with various debug information
                 all_actions += viz.action_to_emoji[action]
-                os.system("cls")
-                sys.stdout.write(
-                    env.render(
-                        f"{all_actions}",
-                        f"reward : {run_reward}",
-                        f"room : {env.room_name}",
-                        agent_name,
-                    )
+                episode_ratio = f"{episode}/{num_episodes}"
+                frame = render_frame(
+                    env,
+                    agent_name,
+                    run_ratio,
+                    episode_ratio,
+                    all_actions,
+                    episode_reward,
+                    fps,
+                    False,
                 )
-                time.sleep(fps)
+                all_frames.append(frame)
 
             # step in env and agent
             reward, state, term = env.step(action)
             action = agent.agent_step(reward, state)
-            run_reward += reward
+            episode_reward += reward
 
             # track visits if necessary
-            if run < n_first_run_visit:
-                first_state_visits[(run, *state)] += 1
-            if run >= num_runs - n_last_run_visit:
-                last_state_visits[(run - (num_runs - n_last_run_visit), *state)] += 1
+            if episode < n_first_episode_visit:
+                first_state_visits[(episode, *state)] += 1
+            if episode >= num_episodes - n_last_episode_visit:
+                last_state_visits[(episode - (num_episodes - n_last_episode_visit), *state)] += 1
 
             if term:
-                if run in runs_nb_to_show:
+                if episode in episodes_nb_to_show:
+                    all_actions += viz.action_to_emoji[action]
                     # see final frame a little longer
-                    time.sleep(1)
-                all_run_rewards.append(run_reward)
+                    episode_ratio = f"{episode}/{num_episodes}"
+                    frame = render_frame(
+                        env,
+                        agent_name,
+                        run_ratio,
+                        episode_ratio,
+                        all_actions,
+                        episode_reward,
+                        fps,
+                        True,
+                    )
+                    all_frames.append(frame)
+                # all_frames
+                all_episode_rewards.append(episode_reward)
                 break
 
     if viz_results:
         save_dir = Path("Escape-Room-RL/viz") / agent_name
         save_dir.mkdir(exist_ok=True, parents=True)
         viz.plot_one_agent_reward(
-            all_run_rewards, agent_name, save_directory=save_dir, **viz_params
+            all_episode_rewards, agent_name, save_directory=save_dir, **viz_params
         )
-        viz.plot_best_action_per_state(agent.q, num_runs, save_directory=save_dir, **viz_params)
-        viz.plot_n_first_visits(first_state_visits, num_runs, save_directory=save_dir, **viz_params)
-        viz.plot_n_last_visits(last_state_visits, num_runs, save_directory=save_dir, **viz_params)
-        viz.plot_q_value_estimation(agent.q, num_runs, save_directory=save_dir, **viz_params)
+        viz.plot_best_action_per_state(agent.q, num_episodes, save_directory=save_dir, **viz_params)
+        viz.plot_n_first_visits(
+            first_state_visits, num_episodes, save_directory=save_dir, **viz_params
+        )
+        viz.plot_n_last_visits(
+            last_state_visits, num_episodes, save_directory=save_dir, **viz_params
+        )
+        viz.plot_q_value_estimation(agent.q, num_episodes, save_directory=save_dir, **viz_params)
 
-    return all_run_rewards
-
-
-env_params = {
-    "grid_width": 4,
-    "grid_height": 4,
-}
-
-fps = 0.2
+    return all_episode_rewards
 
 
-agent_info = {
-    "num_actions": 4,
-    "epsilon": 0.1,
-    "tuple_state": (env_params["grid_height"], env_params["grid_width"]),
-    "discount": 1,
-    "step_size": 0.8,
-    "seed": 3,
-}
-
-agents = {
-    # "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
-    "ExpectedSarsa": ExpectedSarsa(agent_init_info=agent_info),
-}
-
-num_runs = 200
-runs_nb_to_show = range(10)  # show 10 first runs
-runs_nb_to_show = range(num_runs - 10, num_runs)  # show 10 last runs
-runs_nb_to_show = [0, num_runs - 1]  # show first and last runs only
-runs_nb_to_show = []  # show no run on terminal
-runs_nb_to_show = [
-    min(k * num_runs // 5, num_runs - 1) for k in range(10 + 1)
-]  # show all k*10% runs
-
-n_first_run_visit = 120  # number of first run visits to show
-n_last_run_visit = 300  # number of last run visits to show
-
-
-run_parameters = {
-    "num_runs": num_runs,
-    "runs_nb_to_show": runs_nb_to_show,
-    "fps": fps,
-    "n_first_run_visit": n_first_run_visit,
-    "n_last_run_visit": n_last_run_visit,
-    "viz_results": False,
-    "viz_params": {
-        "save": False,
-        "show": False,
-        "cmap": "magma",
-        "max_fontsize": 40,
-        "block_show": True,
-    },
-}
-
-dict_all_run_rewards = {}
-for agent_name, agent in agents.items():
-    for room_name, room_params in rooms:
+def run(run_ratio, agent_name, agent, rooms, episode_params):
+    """make agent go through all rooms, one at a time"""
+    for room_nb, (room_name, room_params) in enumerate(rooms):
         # init env
         env_params["room_params"] = room_params
         env_params["room_name"] = room_name
+        env_params["room_nb"] = f"{room_nb+1}/{len(rooms)}"
         env = EscapeRoomEnvironment(env_params=env_params)
-        # run all runs
-        all_run_rewards = run(agent_name, agent, env, **run_parameters)
-        dict_all_run_rewards[agent_name] = all_run_rewards
+        # run all episodes
+        all_episode_rewards = episode(agent_name, agent, env, run_ratio, **episode_params)
+        dict_all_episode_rewards[agent_name] = all_episode_rewards
+
+
+dict_all_episode_rewards = {}
+num_runs = 3
+for agent_name, agent in agents.items():
+    for run_ratio in tqdm(range(num_runs)):
+        run_ratio = f"{run_ratio+1}/{num_runs}"
+        run(run_ratio, agent_name, agent, rooms, episode_params)
+
 save_dir = Path("Escape-Room-RL/viz")
 save_dir.mkdir(exist_ok=True, parents=True)
 
 
-plt.close("all")
-if run_parameters["viz_results"]:
-    viz.plot_mutliple_agents_reward(dict_all_run_rewards, save_directory=save_dir, **run_parameters)
+# plt.close("all")
+# if episode_params["viz_results"]:
+#     viz.plot_mutliple_agents_reward(dict_all_episode_rewards, save_directory=save_dir, **episode_params)

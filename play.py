@@ -5,11 +5,7 @@ import sys
 import keyboard
 
 from Environment import EscapeRoomEnvironment
-
-env_params = {
-    "grid_width": 6,
-    "grid_height": 8,
-}
+from constants import env_params
 
 env = EscapeRoomEnvironment(env_params=env_params)
 env.start()
@@ -21,7 +17,7 @@ while True:
     os.system("cls")
     sys.stdout.write(env.render())
     event = keyboard.read_event()
-    if event.event_type == keyboard.KEY_DOWN and event.name in key_to_action.keys():
+    if event.event_type == keyboard.KEY_DOWN and event.name in key_to_action:
         action = key_to_action[event.name]
         reward, state, term = env.step(action)
         if term:
