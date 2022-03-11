@@ -6,12 +6,12 @@ import keyboard
 
 from Environment import EscapeRoomEnvironment
 
-init_params = {
+env_params = {
     "grid_width": 6,
     "grid_height": 8,
 }
 
-env = EscapeRoomEnvironment(env_info=init_params)
+env = EscapeRoomEnvironment(env_params=env_params)
 env.start()
 
 key_to_action = {"haut": 0, "gauche": 1, "bas": 2, "droite": 3}

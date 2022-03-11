@@ -12,7 +12,7 @@ class EscapeRoomEnvironment:
         methods.
     """
 
-    def __init__(self, env_info={}):
+    def __init__(self, env_params={}):
         """Setup for the environment called when the experiment first starts.
         Note:
             Initialize a tuple with the reward, first state, boolean
@@ -26,8 +26,8 @@ class EscapeRoomEnvironment:
         # for render purpose only
         self.agent_last_action = None
 
-        self.grid_h = env_info.get("grid_height", 5)
-        self.grid_w = env_info.get("grid_width", 5)
+        self.grid_h = env_params.get("grid_height", 5)
+        self.grid_w = env_params.get("grid_width", 5)
         self.grid_shape = (self.grid_h, self.grid_w)
 
         # The start is in the middle of the bottom row of the room

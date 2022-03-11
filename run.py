@@ -72,6 +72,12 @@ def run(agent_name, agent, env, **run_parameters):
 env_params = {
     "grid_width": 4,
     "grid_height": 5,
+    "room_params": {
+        "door_location": "top-middle",
+        "key_location": "bottom-right",
+        "agent_location": "bottom-middle",
+        "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-left"],
+    },
 }
 
 fps = 0.2
@@ -122,7 +128,7 @@ run_parameters = {
 
 dict_all_run_rewards = {}
 for agent_name, agent in agents.items():
-    env = EscapeRoomEnvironment(env_info=env_params)
+    env = EscapeRoomEnvironment(env_params=env_params)
     all_run_rewards = run(agent_name, agent, env, **run_parameters)
     dict_all_run_rewards[agent_name] = all_run_rewards
 save_dir = Path("Escape-Room-RL/viz")
