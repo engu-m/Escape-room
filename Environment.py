@@ -59,7 +59,9 @@ class EscapeRoomEnvironment:
     ):
         """initalizes environment room"""
         self.goal_loc = self.get_loc(door_location)
-        if key_location is not None:
+        if key_location is None:
+            self.key_loc = None
+        else:
             self.key_loc = self.get_loc(key_location)
         self.start_loc = self.get_loc(agent_location)
         self.obstacle_locs = [self.get_loc(loc) for loc in obstacle_locations]
@@ -72,7 +74,7 @@ class EscapeRoomEnvironment:
             + self.LEFT_map_bound
             + self.obstacle_locs
         )
-        self.forbidden_locs = list(set(self.forbidden_locs))  # render all locs unique
+        self.forbidden_locs = list(set(self.forbidden_locs))  # make all locs unique
 
     def get_loc(self, location):
         loc_conversion = {
@@ -111,7 +113,7 @@ class EscapeRoomEnvironment:
 
         return self.reward_state_term
 
-    def render(self):
+    def render(self, *additional_lines):
         """render the current state to terminal"""
         lut = {
             0: " ",
@@ -154,6 +156,8 @@ class EscapeRoomEnvironment:
             for j in range(r.shape[1]):
                 r_str += lut[r[i, j]]
             r_str += "\n"
+        for line in additional_lines:
+            r_str += line + "\n"
         return r_str
 
     def step(self, action):

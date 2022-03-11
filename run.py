@@ -32,12 +32,20 @@ def run(agent_name, agent, env, **run_parameters):
     for run in tqdm(range(num_runs)):
         reward, state, term = env.start()
         action = agent.agent_start((*env.start_loc, 0), seed=run)
+        all_actions = ""
         run_reward = reward
         # iterate
         while True:
             if run in runs_nb_to_show:
+                all_actions += viz.action_to_emoji[action]
                 os.system("cls")
-                sys.stdout.write(env.render())
+                sys.stdout.write(
+                    env.render(
+                        f"{all_actions}",
+                        f"reward : {run_reward}",
+                        agent_name,
+                    )
+                )
                 time.sleep(fps)
 
             # step in env and agent
@@ -69,16 +77,33 @@ def run(agent_name, agent, env, **run_parameters):
     return all_run_rewards
 
 
-env_params = {
-    "grid_width": 4,
-    "grid_height": 4,
-    "room_params": {
+rooms = [
+    {
         "door_location": "top-middle",
-        "key_location": "bottom-right",
+        "key_location": None,
         "agent_location": "bottom-middle",
         "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-left"],
         "need_key": False,
     },
+    {
+        "door_location": "top-middle",
+        "key_location": "bottom-left",
+        "agent_location": "bottom-middle",
+        "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-right"],
+        "need_key": True,
+    },
+    {
+        "door_location": "top-left",
+        "key_location": "bottom-right",
+        "agent_location": "bottom-middle",
+        "obstacle_locations": [(1, 4 // 2), "top-right", "bottom-left"],
+        "need_key": True,
+    },
+]
+
+env_params = {
+    "grid_width": 4,
+    "grid_height": 4,
 }
 
 fps = 0.2
@@ -94,8 +119,8 @@ agent_info = {
 }
 
 agents = {
+    # "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
     "ExpectedSarsa": ExpectedSarsa(agent_init_info=agent_info),
-    "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
 }
 
 num_runs = 200
@@ -104,7 +129,7 @@ runs_nb_to_show = range(num_runs - 10, num_runs)  # show 10 last runs
 runs_nb_to_show = [0, num_runs - 1]  # show first and last runs only
 runs_nb_to_show = []  # show no run on terminal
 runs_nb_to_show = [
-    min(k * num_runs // 10, num_runs - 1) for k in range(10 + 1)
+    min(k * num_runs // 5, num_runs - 1) for k in range(10 + 1)
 ]  # show all k*10% runs
 
 n_first_run_visit = 120  # number of first run visits to show
@@ -129,13 +154,15 @@ run_parameters = {
 
 dict_all_run_rewards = {}
 for agent_name, agent in agents.items():
-    env = EscapeRoomEnvironment(env_params=env_params)
-    all_run_rewards = run(agent_name, agent, env, **run_parameters)
-    dict_all_run_rewards[agent_name] = all_run_rewards
+    for room in rooms:
+        env_params["room_params"] = room
+        env = EscapeRoomEnvironment(env_params=env_params)
+        all_run_rewards = run(agent_name, agent, env, **run_parameters)
+        dict_all_run_rewards[agent_name] = all_run_rewards
 save_dir = Path("Escape-Room-RL/viz")
 save_dir.mkdir(exist_ok=True, parents=True)
 
 
 plt.close("all")
-if run_parameters["viz_params"]["viz_results"]
-viz.plot_mutliple_agents_reward(dict_all_run_rewards, save_directory=save_dir, **custom_viz_params)
+if run_parameters["viz_results"]:
+    viz.plot_mutliple_agents_reward(dict_all_run_rewards, save_directory=save_dir, **run_parameters)
