@@ -30,29 +30,13 @@ class EscapeRoomEnvironment:
         self.grid_w = env_params.get("grid_width", 5)
         self.grid_shape = (self.grid_h, self.grid_w)
 
-        # The start is in the middle of the bottom row of the room
-        self.start_loc = (self.grid_h - 1, self.grid_w // 2)
-        # The door is in the middle of the top row of the room
-        self.goal_loc = (0, self.grid_w // 2)
-        # There is an obstacle in front of the door
-        self.obstacle_loc = (self.goal_loc[0] + 1, self.goal_loc[1])
-
         # map bounds
         self.UP_map_bound = [(-1, y) for y in range(-1, self.grid_w + 1)]
         self.DOWN_map_bound = [(self.grid_h, y) for y in range(-1, self.grid_w + 1)]
         self.RIGHT_map_bound = [(x, -1) for x in range(-1, self.grid_h + 1)]
         self.LEFT_map_bound = [(x, self.grid_w) for x in range(-1, self.grid_h + 1)]
-        self.forbidden_locs = (
-            self.UP_map_bound
-            + self.DOWN_map_bound
-            + self.RIGHT_map_bound
-            + self.LEFT_map_bound
-            + [self.obstacle_loc]
-        )
-        self.forbidden_locs = list(set(self.forbidden_locs))  # render all locs unique
-        # The key is in the bottom right corner
-        self.key_loc = (self.grid_h - 1, self.grid_w - 1)
-        # The player does not have the key in the beginning
+
+        self.create_room(**env_params["room_params"])
         self.got_key = 0
 
         assert (
@@ -64,6 +48,50 @@ class EscapeRoomEnvironment:
         assert (
             self.goal_loc not in self.forbidden_locs
         ), "goal location init is forbidden, try another location"
+
+    def create_room(
+        self,
+        door_location,
+        key_location,
+        agent_location,
+        obstacle_locations,
+        need_key,
+    ):
+        """initalizes environment room"""
+        self.goal_loc = self.get_loc(door_location)
+        if key_location is not None:
+            self.key_loc = self.get_loc(key_location)
+        self.start_loc = self.get_loc(agent_location)
+        self.obstacle_locs = [self.get_loc(loc) for loc in obstacle_locations]
+        self.need_key = need_key
+
+        self.forbidden_locs = (
+            self.UP_map_bound
+            + self.DOWN_map_bound
+            + self.RIGHT_map_bound
+            + self.LEFT_map_bound
+            + self.obstacle_locs
+        )
+        self.forbidden_locs = list(set(self.forbidden_locs))  # render all locs unique
+
+    def get_loc(self, location):
+        loc_conversion = {
+            "top": lambda h_or_w: 0,
+            "bottom": lambda h_or_w: h_or_w - 1,
+            "right": lambda h_or_w: h_or_w - 1,
+            "left": lambda h_or_w: 0,
+            "middle": lambda h_or_w: h_or_w // 2,
+            "center": lambda h_or_w: h_or_w // 2,
+            "one_after_top": lambda h_or_w: 1,
+            "one_before_bottom": lambda h_or_w: h_or_w - 2,
+        }
+        if isinstance(location, str):
+            h_str, w_str = location.split("-")
+            h = loc_conversion[h_str](self.grid_h)
+            w = loc_conversion[w_str](self.grid_w)
+            return (h, w)
+        else:
+            return location
 
     def start(self):
         """The first method called when the episode starts, called before the
@@ -102,9 +130,10 @@ class EscapeRoomEnvironment:
         r = np.zeros(self.grid_shape, dtype="int8")
 
         r[self.goal_loc] = 2  # door
-        if self.got_key == 0:
+        if self.need_key and self.got_key == 0:
             r[self.key_loc] = 3  # key
-        r[self.obstacle_loc] = 6
+        for obstacle_loc in self.obstacle_locs:
+            r[obstacle_loc] = 6
 
         agent_state = self.reward_state_term[1]
 
@@ -147,10 +176,11 @@ class EscapeRoomEnvironment:
 
         if possible_next_loc not in self.forbidden_locs:
             self.agent_loc = possible_next_loc
-            if self.agent_loc == self.goal_loc and self.got_key == 1:
-                reward = 10
-                terminal = True
-            elif self.agent_loc == self.key_loc and self.got_key == 0:
+            if self.agent_loc == self.goal_loc:
+                if (self.need_key and self.got_key == 1) or not self.need_key:
+                    reward = 10
+                    terminal = True
+            elif self.need_key and self.agent_loc == self.key_loc and self.got_key == 0:
                 self.got_key = 1
                 reward = 1
 

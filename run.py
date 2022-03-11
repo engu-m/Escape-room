@@ -71,12 +71,13 @@ def run(agent_name, agent, env, **run_parameters):
 
 env_params = {
     "grid_width": 4,
-    "grid_height": 5,
+    "grid_height": 4,
     "room_params": {
         "door_location": "top-middle",
         "key_location": "bottom-right",
         "agent_location": "bottom-middle",
         "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-left"],
+        "need_key": False,
     },
 }
 
@@ -100,11 +101,11 @@ agents = {
 num_runs = 200
 runs_nb_to_show = range(10)  # show 10 first runs
 runs_nb_to_show = range(num_runs - 10, num_runs)  # show 10 last runs
+runs_nb_to_show = [0, num_runs - 1]  # show first and last runs only
+runs_nb_to_show = []  # show no run on terminal
 runs_nb_to_show = [
     min(k * num_runs // 10, num_runs - 1) for k in range(10 + 1)
 ]  # show all k*10% runs
-runs_nb_to_show = [0, num_runs - 1]  # show first and last runs only
-runs_nb_to_show = []  # show no run on terminal
 
 n_first_run_visit = 120  # number of first run visits to show
 n_last_run_visit = 300  # number of last run visits to show
@@ -116,7 +117,7 @@ run_parameters = {
     "fps": fps,
     "n_first_run_visit": n_first_run_visit,
     "n_last_run_visit": n_last_run_visit,
-    "viz_results": True,
+    "viz_results": False,
     "viz_params": {
         "save": False,
         "show": False,
@@ -136,6 +137,5 @@ save_dir.mkdir(exist_ok=True, parents=True)
 
 
 plt.close("all")
-custom_viz_params = run_parameters["viz_params"]
-custom_viz_params["save"] = True
+if run_parameters["viz_params"]["viz_results"]
 viz.plot_mutliple_agents_reward(dict_all_run_rewards, save_directory=save_dir, **custom_viz_params)
