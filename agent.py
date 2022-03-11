@@ -25,6 +25,7 @@ class BaseAgent:
         self.step_size = agent_init_info["step_size"]
         self.discount = agent_init_info["discount"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
+        self.rewards = [0]
 
         # num_states_x (height), num_states_y (width), got_key or not (2), num_actions (4)
         self.q = np.zeros((*self.tuple_state, 2, self.num_actions))
