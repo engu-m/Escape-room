@@ -37,6 +37,8 @@ class EscapeRoomEnvironment:
         self.LEFT_map_bound = [(x, self.grid_w) for x in range(-1, self.grid_h + 1)]
 
         self.create_room(**env_params["room_params"])
+        self.room_name = env_params["room_name"]
+
         self.got_key = 0
 
         assert (

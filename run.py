@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 from Environment import EscapeRoomEnvironment
 from agent import QLearningAgent, ExpectedSarsa
+from rooms import rooms
 import viz
 
 
@@ -43,6 +44,7 @@ def run(agent_name, agent, env, **run_parameters):
                     env.render(
                         f"{all_actions}",
                         f"reward : {run_reward}",
+                        f"room : {env.room_name}",
                         agent_name,
                     )
                 )
@@ -60,6 +62,9 @@ def run(agent_name, agent, env, **run_parameters):
                 last_state_visits[(run - (num_runs - n_last_run_visit), *state)] += 1
 
             if term:
+                if run in runs_nb_to_show:
+                    # see final frame a little longer
+                    time.sleep(1)
                 all_run_rewards.append(run_reward)
                 break
 
@@ -76,30 +81,6 @@ def run(agent_name, agent, env, **run_parameters):
 
     return all_run_rewards
 
-
-rooms = [
-    {
-        "door_location": "top-middle",
-        "key_location": None,
-        "agent_location": "bottom-middle",
-        "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-left"],
-        "need_key": False,
-    },
-    {
-        "door_location": "top-middle",
-        "key_location": "bottom-left",
-        "agent_location": "bottom-middle",
-        "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-right"],
-        "need_key": True,
-    },
-    {
-        "door_location": "top-left",
-        "key_location": "bottom-right",
-        "agent_location": "bottom-middle",
-        "obstacle_locations": [(1, 4 // 2), "top-right", "bottom-left"],
-        "need_key": True,
-    },
-]
 
 env_params = {
     "grid_width": 4,
@@ -154,9 +135,12 @@ run_parameters = {
 
 dict_all_run_rewards = {}
 for agent_name, agent in agents.items():
-    for room in rooms:
-        env_params["room_params"] = room
+    for room_name, room_params in rooms:
+        # init env
+        env_params["room_params"] = room_params
+        env_params["room_name"] = room_name
         env = EscapeRoomEnvironment(env_params=env_params)
+        # run all runs
         all_run_rewards = run(agent_name, agent, env, **run_parameters)
         dict_all_run_rewards[agent_name] = all_run_rewards
 save_dir = Path("Escape-Room-RL/viz")
