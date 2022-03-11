@@ -139,8 +139,8 @@ def run(run_ratio, agent_name, agent, rooms, episode_params):
 dict_all_episode_rewards = {}
 num_runs = 3
 for agent_name, agent in agents.items():
-    for run_ratio in tqdm(range(num_runs)):
-        run_ratio = f"{run_ratio+1}/{num_runs}"
+    for run_nb in tqdm(range(num_runs)):
+        run_ratio = f"{run_nb+1}/{num_runs}"
         run(run_ratio, agent_name, agent, rooms, episode_params)
 
 save_dir = Path("Escape-Room-RL/viz")
