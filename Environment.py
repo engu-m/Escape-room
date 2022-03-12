@@ -38,7 +38,7 @@ class EscapeRoomEnvironment:
 
         self.create_room(**env_params["room_params"])
         self.room_name = env_params["room_name"]
-        self.room_nb = env_params["room_nb"]
+        self.room_ratio = env_params["room_ratio"]
 
         self.got_key = 0
 

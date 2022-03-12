@@ -3,33 +3,46 @@
 import os
 import sys
 import time
-import numpy as np
-from tqdm import tqdm
 from pathlib import Path
+
+import numpy as np
+from textwrap import wrap
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 from Environment import EscapeRoomEnvironment
 from constants import *
 import viz
+from string_recorder import StringRecorder
 
 
 def render_frame(
-    env, agent_name, run_ratio, episode_ratio, all_actions, episode_reward, fps, terminal
+    env,
+    agent_name,
+    run_ratio,
+    episode_ratio,
+    all_actions,
+    episode_reward,
+    fps,
+    terminal,
+    display_on_screen,
 ):
     """render given frame to terminal"""
-    os.system("cls")
     frame = env.render(
-        # f"{all_actions}",
+        # "\n".join(wrap(all_actions, env.grid_w + 2)), # uncomment to add all actions from episode to frame
         f"reward : {episode_reward}",
-        f"room : {env.room_nb} - {env.room_name}",
+        f"room : {env.room_ratio}",
         f"run : {run_ratio}",
         f"episode : {episode_ratio}",
         agent_name,
     )
-    sys.stdout.write(frame)
-    time.sleep(fps)
-    if terminal:
-        time.sleep(4 * fps)
+    if display_on_screen:
+        os.system("cls")
+        sys.stdout.write(frame)
+        time.sleep(fps)
+        if terminal:
+            # see final frame a little longer
+            time.sleep(fps)
     return frame
 
 
@@ -40,6 +53,8 @@ def episode(agent_name, agent, env, run_ratio, **episode_parameters):
     fps = episode_parameters["fps"]
     n_first_episode_visit = episode_parameters["n_first_episode_visit"]
     n_last_episode_visit = episode_parameters["n_last_episode_visit"]
+    save_frames_to_gif = episode_parameters["save_frames_to_gif"]
+    display_on_screen = episode_parameters["display_on_screen"]
     viz_results = episode_parameters["viz_results"]
     viz_params = episode_parameters["viz_params"]
 
@@ -52,9 +67,10 @@ def episode(agent_name, agent, env, run_ratio, **episode_parameters):
     all_episode_rewards = []
     for episode in tqdm(range(num_episodes)):
         reward, state, term = env.start()
-        action = agent.agent_start((*env.start_loc, 0), seed=episode)
+        action = agent.agent_start(
+            (*env.start_loc, 0), seed=episode + num_episodes * int(get_nb_from_ratio(run_ratio))
+        )
         all_actions = ""
-        all_frames = []
         episode_reward = reward
         # iterate
         while True:
@@ -71,8 +87,10 @@ def episode(agent_name, agent, env, run_ratio, **episode_parameters):
                     episode_reward,
                     fps,
                     False,
+                    display_on_screen,
                 )
-                all_frames.append(frame)
+                if save_frames_to_gif:
+                    rec.record_frame(frame)
 
             # step in env and agent
             reward, state, term = env.step(action)
@@ -88,8 +106,7 @@ def episode(agent_name, agent, env, run_ratio, **episode_parameters):
             if term:
                 if episode in episodes_nb_to_show:
                     all_actions += viz.action_to_emoji[action]
-                    # see final frame a little longer
-                    episode_ratio = f"{episode}/{num_episodes}"
+                    episode_ratio = f"{episode+1}/{num_episodes}"
                     frame = render_frame(
                         env,
                         agent_name,
@@ -99,26 +116,42 @@ def episode(agent_name, agent, env, run_ratio, **episode_parameters):
                         episode_reward,
                         fps,
                         True,
+                        display_on_screen,
                     )
-                    all_frames.append(frame)
-                # all_frames
+                    if save_frames_to_gif:
+                        # save terminal recording to gif
+                        video_dir = Path("Escape-Room-RL/video")
+                        video_dir.mkdir(exist_ok=True)
+                        rec.record_frame(frame)
+                        rec.make_gif(
+                            str(
+                                video_dir
+                                / (
+                                    f"agent-{agent_name}_"
+                                    f"run-{get_nb_from_ratio(run_ratio)}_"
+                                    f"room-{get_nb_from_ratio(env.room_ratio)}_"
+                                    f"episode-{get_nb_from_ratio(episode_ratio)}"
+                                    ".gif"
+                                )
+                            ),
+                        )
                 all_episode_rewards.append(episode_reward)
                 break
 
     if viz_results:
-        save_dir = Path("Escape-Room-RL/viz") / agent_name
-        save_dir.mkdir(exist_ok=True, parents=True)
+        viz_dir = Path("Escape-Room-RL/viz") / agent_name
+        viz_dir.mkdir(exist_ok=True, parents=True)
         viz.plot_one_agent_reward(
-            all_episode_rewards, agent_name, save_directory=save_dir, **viz_params
+            all_episode_rewards, agent_name, save_directory=viz_dir, **viz_params
         )
-        viz.plot_best_action_per_state(agent.q, num_episodes, save_directory=save_dir, **viz_params)
+        viz.plot_best_action_per_state(agent.q, num_episodes, save_directory=viz_dir, **viz_params)
         viz.plot_n_first_visits(
-            first_state_visits, num_episodes, save_directory=save_dir, **viz_params
+            first_state_visits, num_episodes, save_directory=viz_dir, **viz_params
         )
         viz.plot_n_last_visits(
-            last_state_visits, num_episodes, save_directory=save_dir, **viz_params
+            last_state_visits, num_episodes, save_directory=viz_dir, **viz_params
         )
-        viz.plot_q_value_estimation(agent.q, num_episodes, save_directory=save_dir, **viz_params)
+        viz.plot_q_value_estimation(agent.q, num_episodes, save_directory=viz_dir, **viz_params)
 
     return all_episode_rewards
 
@@ -129,24 +162,25 @@ def run(run_ratio, agent_name, agent, rooms, episode_params):
         # init env
         env_params["room_params"] = room_params
         env_params["room_name"] = room_name
-        env_params["room_nb"] = f"{room_nb+1}/{len(rooms)}"
+        env_params["room_ratio"] = f"{room_nb+1}/{len(rooms)}"
         env = EscapeRoomEnvironment(env_params=env_params)
         # run all episodes
         all_episode_rewards = episode(agent_name, agent, env, run_ratio, **episode_params)
         dict_all_episode_rewards[agent_name] = all_episode_rewards
 
 
+global rec
+rec = StringRecorder()
 dict_all_episode_rewards = {}
 num_runs = 3
-for agent_name, agent in agents.items():
+for agent_name, agent in tqdm(agents.items()):
     for run_nb in tqdm(range(num_runs)):
         run_ratio = f"{run_nb+1}/{num_runs}"
         run(run_ratio, agent_name, agent, rooms, episode_params)
 
-save_dir = Path("Escape-Room-RL/viz")
-save_dir.mkdir(exist_ok=True, parents=True)
 
-
+# save_dir = Path("Escape-Room-RL/viz")
+# save_dir.mkdir(exist_ok=True, parents=True)
 # plt.close("all")
 # if episode_params["viz_results"]:
 #     viz.plot_mutliple_agents_reward(dict_all_episode_rewards, save_directory=save_dir, **episode_params)

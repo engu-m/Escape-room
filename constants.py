@@ -1,13 +1,11 @@
 """All constants used in other programs """
 
-from agent import ExpectedSarsa
+from agent import ExpectedSarsa, QLearningAgent
 
 env_params = {
     "grid_width": 4,
     "grid_height": 4,
 }
-
-fps = 0.15
 
 
 agent_info = {
@@ -20,10 +18,11 @@ agent_info = {
 }
 
 agents = {
-    # "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
+    "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
     "ExpectedSarsa": ExpectedSarsa(agent_init_info=agent_info),
 }
 
+fps = 0.2
 num_episodes = 200
 episodes_nb_to_show = range(10)  # show 10 first episodes
 episodes_nb_to_show = range(num_episodes - 10, num_episodes)  # show 10 last episodes
@@ -43,7 +42,8 @@ episode_params = {
     "fps": fps,
     "n_first_episode_visit": n_first_episode_visit,
     "n_last_episode_visit": n_last_episode_visit,
-    "save_to_gif": True,
+    "save_frames_to_gif": True,
+    "display_on_screen": False,
     "viz_results": False,
     "viz_params": {
         "save": False,
@@ -117,3 +117,13 @@ rooms = [
         },
     ),
 ]
+
+
+def get_nb_from_ratio(s: str):
+    """If s is like 15/2508, this returns only 15, the first number padded
+    by the length of 2508 so 0015
+    This allows the files to be alphabetically sorted"""
+    nb, total = s.split("/")
+    fmt_str = f"{{:0{len(total)}d}}"
+    nb_padded = fmt_str.format(int(nb))
+    return nb_padded
