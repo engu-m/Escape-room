@@ -46,7 +46,7 @@ def render_frame(
     return frame
 
 
-def episode(agent_name, agent, env, run_ratio, **episode_parameters):
+def episodes(agent_name, agent, env, run_ratio, **episode_parameters):
     """run an episode for the agent in one env/room"""
     num_episodes = episode_parameters["num_episodes"]
     episodes_nb_to_show = episode_parameters["episodes_nb_to_show"]
@@ -137,22 +137,6 @@ def episode(agent_name, agent, env, run_ratio, **episode_parameters):
                         )
                 all_episode_rewards.append(episode_reward)
                 break
-
-    if viz_results:
-        viz_dir = Path("Escape-Room-RL/viz") / agent_name
-        viz_dir.mkdir(exist_ok=True, parents=True)
-        viz.plot_one_agent_reward(
-            all_episode_rewards, agent_name, save_directory=viz_dir, **viz_params
-        )
-        viz.plot_best_action_per_state(agent.q, num_episodes, save_directory=viz_dir, **viz_params)
-        viz.plot_n_first_visits(
-            first_state_visits, num_episodes, save_directory=viz_dir, **viz_params
-        )
-        viz.plot_n_last_visits(
-            last_state_visits, num_episodes, save_directory=viz_dir, **viz_params
-        )
-        viz.plot_q_value_estimation(agent.q, num_episodes, save_directory=viz_dir, **viz_params)
-
     return all_episode_rewards
 
 
@@ -165,8 +149,7 @@ def run(run_ratio, agent_name, agent, rooms, episode_params):
         env_params["room_ratio"] = f"{room_nb+1}/{len(rooms)}"
         env = EscapeRoomEnvironment(env_params=env_params)
         # run all episodes
-        all_episode_rewards = episode(agent_name, agent, env, run_ratio, **episode_params)
-        dict_all_episode_rewards[agent_name] = all_episode_rewards
+        episodes(agent_name, agent, env, run_ratio, **episode_params)
 
 
 global rec
@@ -177,10 +160,3 @@ for agent_name, agent in tqdm(agents.items()):
     for run_nb in tqdm(range(num_runs)):
         run_ratio = f"{run_nb+1}/{num_runs}"
         run(run_ratio, agent_name, agent, rooms, episode_params)
-
-
-# save_dir = Path("Escape-Room-RL/viz")
-# save_dir.mkdir(exist_ok=True, parents=True)
-# plt.close("all")
-# if episode_params["viz_results"]:
-#     viz.plot_mutliple_agents_reward(dict_all_episode_rewards, save_directory=save_dir, **episode_params)
