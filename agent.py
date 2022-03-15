@@ -21,8 +21,8 @@ class BaseAgent:
         """
         # Store the parameters provided in agent_init_info.
         self.num_actions = agent_params["num_actions"]
-        self.tuple_state = agent_params["tuple_state"]
-        self.num_states_x, self.num_states_y = self.tuple_state
+        self.grid_shape = agent_params["grid_shape"]
+        self.num_states_x, self.num_states_y = self.grid_shape
         self.epsilon = agent_params["epsilon"]
         self.step_size = agent_params["step_size"]
         self.discount = agent_params["discount"]
@@ -30,7 +30,7 @@ class BaseAgent:
         self.rewards = [0]
 
         # num_states_x (height), num_states_y (width), got_key or not (2), num_actions (4)
-        self.q = np.zeros((*self.tuple_state, 2, self.num_actions))
+        self.q = np.zeros((*self.grid_shape, 2, self.num_actions))
 
     def agent_start(self, state, seed):
         """The first method called when the episode starts, called after

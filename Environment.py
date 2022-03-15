@@ -104,6 +104,7 @@ class EscapeRoomEnvironment:
         self.got_key = 0  # take the key from the player
         # agent_loc will hold the current location of the agent
         self.agent_loc = self.start_loc
+        self.agent_last_action = None  # for display purpose
         # state is the one dimensional state representation of the agent location.
         state = (*self.agent_loc, self.got_key)
         termination = False

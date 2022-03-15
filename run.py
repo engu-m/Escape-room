@@ -5,6 +5,7 @@ import sys
 import time
 from pathlib import Path
 from tqdm import tqdm
+import numpy as np
 
 from Environment import EscapeRoomEnvironment
 from constants import get_nb_from_ratio
@@ -60,13 +61,27 @@ def render_frame(
 def complete_run(env_params, run_params, agents, agent_params):
     """complete run of all runs + rooms + episodes"""
     num_runs = run_params["num_runs"]
+    num_episodes = run_params["num_episodes"]
     rooms = env_params["rooms"]
+    num_rooms = len(rooms)
+    num_actions = agent_params["num_actions"]
+    grid_shape = agent_params["grid_shape"]
+    tuple_state = (*grid_shape, 2)
     rec = StringRecorder()
-    for agent_name, agent_class in tqdm(agents.items()):
+
+    state_actions = np.zeros(
+        (len(agents), num_runs, num_rooms, num_episodes, *tuple_state, num_actions)
+    )
+    rewards_continuous = np.zeros((len(agents), num_runs, num_episodes * num_rooms))
+    rewards_room_by_room = np.zeros((len(agents), num_runs, num_rooms, num_episodes))
+    value_last_episode = np.zeros((len(agents), num_runs, num_rooms, *tuple_state, num_actions))
+
+    for agent_nb, (agent_name, agent_class) in enumerate(tqdm(agents.items())):
         for run_nb in tqdm(range(num_runs)):
             agent_params["seed"] = run_nb
             agent = agent_class(agent_params)
             run_ratio = f"{run_nb+1}/{num_runs}"
+            run_total_episode = 0
             for room_nb, (room_name, room_params) in enumerate(rooms):
                 # init env
                 env_params["room_params"] = room_params
@@ -79,13 +94,14 @@ def complete_run(env_params, run_params, agents, agent_params):
                 fps = run_params["fps"]
                 save_frames_to_gif = run_params["save_frames_to_gif"]
 
+                iteration = 0
                 for episode in tqdm(range(num_episodes), leave=False):
                     # start agent
-                    action = agent.agent_start(
-                        (*env.start_loc, 0), seed=episode + num_episodes * run_nb
-                    )
                     reward, state, term = env.start()
+                    action = agent.agent_start(state, seed=episode + num_episodes * run_nb)
                     episode_reward = reward
+
+                    iteration += 1
                     # iterate
                     while True:
                         if episode in episodes_nb_to_show:
@@ -106,9 +122,19 @@ def complete_run(env_params, run_params, agents, agent_params):
                         # step in env and agent
                         reward, state, term = env.step(action)
                         action = agent.agent_step(reward, state)
-                        episode_reward += reward
+
+                        # store statistics
+                        state_actions[(agent_nb, run_nb, room_nb, episode, *state, action)] += 1
+                        episode_reward += agent_params["discount"] ** iteration * reward
+
+                        iteration += 1
 
                         if term:
+                            rewards_continuous[agent_nb, run_nb, run_total_episode] = episode_reward
+                            rewards_room_by_room[
+                                agent_nb, run_nb, room_nb, episode
+                            ] = episode_reward
+                            run_total_episode += 1
                             if episode in episodes_nb_to_show:
                                 episode_ratio = f"{episode+1}/{num_episodes}"
                                 render_frame(
@@ -123,3 +149,13 @@ def complete_run(env_params, run_params, agents, agent_params):
                                     rec,
                                 )
                             break
+            value_last_episode[agent_nb, run_nb, room_nb] = agent.q
+    state_visits = state_actions.sum(axis=-1)
+
+    return {
+        "state_actions": state_actions,
+        "state_visits": state_visits,
+        "rewards_continuous": rewards_continuous,
+        "rewards_room_by_room": rewards_room_by_room,
+        "value_last_episode": value_last_episode,
+    }
