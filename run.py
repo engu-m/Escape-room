@@ -51,7 +51,7 @@ def render_frame(
             # save terminal recording to video
             video_dir = Path("./Escape-Room-RL/video")
             video_dir.mkdir(exist_ok=True)
-            rec.make_gif(
+            rec.make_video(
                 str(
                     video_dir
                     / (
