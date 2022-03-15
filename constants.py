@@ -2,6 +2,8 @@
 
 from agent import ExpectedSarsa, QLearningAgent
 
+action_to_emoji = {0: "↑", 1: "←", 2: "↓", 3: "→"}
+
 env_params = {
     "grid_width": 4,
     "grid_height": 4,
@@ -22,9 +24,19 @@ agents = {
     "ExpectedSarsa": ExpectedSarsa,
 }
 
-fps = 0.2
-num_episodes = 50
-num_runs = 3
+n_first_episode_visit = 120  # number of first episode visits to show
+n_last_episode_visit = 300  # number of last episode visits to show
+
+run_params = {
+    "num_runs": 3,
+    "num_episodes": 50,
+    "fps": 0,
+    "n_first_episode_visit": n_first_episode_visit,
+    "n_last_episode_visit": n_last_episode_visit,
+    "save_frames_to_gif": False,
+}
+
+num_episodes = run_params["num_episodes"]
 episodes_nb_to_show = range(10)  # show 10 first episodes
 episodes_nb_to_show = range(num_episodes - 10, num_episodes)  # show 10 last episodes
 episodes_nb_to_show = [0, num_episodes - 1]  # show first and last episodes only
@@ -33,20 +45,8 @@ episodes_nb_to_show = [
 ]  # show all k*10% episodes
 episodes_nb_to_show = []  # show no episode on terminal
 
-n_first_episode_visit = 120  # number of first episode visits to show
-n_last_episode_visit = 300  # number of last episode visits to show
+run_params["episodes_nb_to_show"] = (episodes_nb_to_show,)
 
-
-episode_params = {
-    "num_episodes": num_episodes,
-    "episodes_nb_to_show": episodes_nb_to_show,
-    "fps": fps,
-    "n_first_episode_visit": n_first_episode_visit,
-    "n_last_episode_visit": n_last_episode_visit,
-    "save_frames_to_gif": False,
-    "display_on_screen": False,
-    "viz_results": False,
-}
 
 viz_params = {
     "save": False,
@@ -118,6 +118,9 @@ rooms = [
         },
     ),
 ]
+
+
+env_params["rooms"] = rooms
 
 
 def get_nb_from_ratio(s: str):

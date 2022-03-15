@@ -13,11 +13,7 @@ class EscapeRoomEnvironment:
     """
 
     def __init__(self, env_params={}):
-        """Setup for the environment called when the experiment first starts.
-        Note:
-            Initialize a tuple with the reward, first state, boolean
-            indicating if it's terminal.
-        """
+        """Initialize the encironment"""
         reward = None
         state = None  # See Aside
         termination = None
@@ -95,8 +91,7 @@ class EscapeRoomEnvironment:
             h = loc_conversion[h_str](self.grid_h)
             w = loc_conversion[w_str](self.grid_w)
             return (h, w)
-        else:
-            return location
+        return location
 
     def start(self):
         """The first method called when the episode starts, called before the
@@ -117,7 +112,8 @@ class EscapeRoomEnvironment:
         return self.reward_state_term
 
     def render(self, *additional_lines):
-        """render the current state to terminal"""
+        """render the current state to string. Further processing might include
+        display on screen and save to gif"""
         lut = {
             0: " ",
             1: gym.utils.colorize("P", "blue"),  # player
