@@ -20,7 +20,8 @@ def render_frame(
     episode_ratio,
     episode_reward,
     fps,
-    save_frames_to_gif,
+    save,
+    show,
     rec,
 ):
     """create string to represent frame.
@@ -34,15 +35,17 @@ def render_frame(
         f"episode : {episode_ratio}",
         f"reward : {episode_reward}",
     )
-    if fps > 0:
+    if show:
         os.system("cls")
         sys.stdout.write(frame)
         time.sleep(fps)
-    if save_frames_to_gif:
+        if term:
+            time.sleep(2 * fps)
+    if save:
         rec.record_frame(frame)
         if term:
             # save terminal recording to gif
-            video_dir = Path("Escape-Room-RL/video")
+            video_dir = Path("./Escape-Room-RL/video")
             video_dir.mkdir(exist_ok=True)
             rec.make_gif(
                 str(
@@ -60,10 +63,16 @@ def render_frame(
 
 def complete_run(env_params, run_params, agents, agent_params):
     """complete run of all runs + rooms + episodes"""
+    # run params
     num_runs = run_params["num_runs"]
     num_episodes = run_params["num_episodes"]
+    fps = run_params["fps"]
+    episodes_to_show = run_params["episodes_to_show"]
+    episodes_to_save = run_params["episodes_to_save"]
+    # env params
     rooms = env_params["rooms"]
     num_rooms = len(rooms)
+    # agent_params
     num_actions = agent_params["num_actions"]
     grid_shape = agent_params["grid_shape"]
     tuple_state = (*grid_shape, 2)
@@ -83,16 +92,11 @@ def complete_run(env_params, run_params, agents, agent_params):
             run_ratio = f"{run_nb+1}/{num_runs}"
             run_total_episode = 0
             for room_nb, (room_name, room_params) in enumerate(rooms):
-                # init env
+                # initialize env
                 env_params["room_params"] = room_params
                 env_params["room_name"] = room_name
                 env_params["room_ratio"] = f"{room_nb+1}/{len(rooms)}"
                 env = EscapeRoomEnvironment(env_params=env_params)
-                # run all episodes
-                num_episodes = run_params["num_episodes"]
-                episodes_nb_to_show = run_params["episodes_nb_to_show"]
-                fps = run_params["fps"]
-                save_frames_to_gif = run_params["save_frames_to_gif"]
 
                 iteration = 0
                 for episode in tqdm(range(num_episodes), leave=False):
@@ -104,8 +108,10 @@ def complete_run(env_params, run_params, agents, agent_params):
                     iteration += 1
                     # iterate
                     while True:
-                        if episode in episodes_nb_to_show:
-                            # render epsiode to terminal with various debug information
+                        # record episode
+                        save = (agent_nb, run_nb, room_nb, episode) in episodes_to_save
+                        show = (agent_nb, run_nb, room_nb, episode) in episodes_to_show
+                        if save or show:
                             episode_ratio = f"{episode+1}/{num_episodes}"
                             render_frame(
                                 False,
@@ -115,7 +121,8 @@ def complete_run(env_params, run_params, agents, agent_params):
                                 episode_ratio,
                                 episode_reward,
                                 fps,
-                                save_frames_to_gif,
+                                save,
+                                show,
                                 rec,
                             )
 
@@ -130,12 +137,17 @@ def complete_run(env_params, run_params, agents, agent_params):
                         iteration += 1
 
                         if term:
+                            # store statistics
                             rewards_continuous[agent_nb, run_nb, run_total_episode] = episode_reward
                             rewards_room_by_room[
                                 agent_nb, run_nb, room_nb, episode
                             ] = episode_reward
                             run_total_episode += 1
-                            if episode in episodes_nb_to_show:
+
+                            # record episode
+                            save = (agent_nb, run_nb, room_nb, episode) in episodes_to_save
+                            show = (agent_nb, run_nb, room_nb, episode) in episodes_to_show
+                            if save or show:
                                 episode_ratio = f"{episode+1}/{num_episodes}"
                                 render_frame(
                                     True,
@@ -145,11 +157,12 @@ def complete_run(env_params, run_params, agents, agent_params):
                                     episode_ratio,
                                     episode_reward,
                                     fps,
-                                    save_frames_to_gif,
+                                    save,
+                                    show,
                                     rec,
                                 )
                             break
-            value_last_episode[agent_nb, run_nb, room_nb] = agent.q
+                value_last_episode[agent_nb, run_nb, room_nb] = agent.q
     state_visits = state_actions.sum(axis=-1)
 
     return {
