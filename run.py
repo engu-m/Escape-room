@@ -44,7 +44,11 @@ def render_frame(
     if save:
         rec.record_frame(frame)
         if term:
-            # save terminal recording to gif
+            # make it last a little more
+            rec.record_frame(frame)
+            rec.record_frame(frame)
+            rec.record_frame(frame)
+            # save terminal recording to video
             video_dir = Path("./Escape-Room-RL/video")
             video_dir.mkdir(exist_ok=True)
             rec.make_gif(

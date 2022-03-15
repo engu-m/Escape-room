@@ -117,17 +117,16 @@ class StringRecorder(object):
             self.height = height
         self._step += 1
 
-    def make_gif(self, save_path, speed=0.3):
-        if not save_path.endswith(".gif"):
-            save_path += ".gif"
-
+    def make_gif(self, save_path, fps=5):
+        if not save_path.endswith(".mp4"):
+            save_path += ".mp4"
         images = []
         for img in self._images:
             image = PIL.Image.new("RGB", (self.width, self.height), "#f8f8f2")
             image.paste(img, box=(0, 0))
             images.append(numpy.asarray(image))
 
-        imageio.mimsave(save_path, images, duration=speed)
+        imageio.mimsave(save_path, images, fps=fps)
         self.reset()
 
     @property
