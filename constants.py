@@ -16,7 +16,6 @@ agent_params = {
     "tuple_state": (env_params["grid_height"], env_params["grid_width"]),
     "discount": 1,
     "step_size": 0.8,
-    "seed": 3,
 }
 
 agents = {
@@ -33,7 +32,7 @@ run_params = {
     "fps": 0,
     "n_first_episode_visit": n_first_episode_visit,
     "n_last_episode_visit": n_last_episode_visit,
-    "save_frames_to_gif": False,
+    "save_frames_to_gif": True,
 }
 
 num_episodes = run_params["num_episodes"]
@@ -44,8 +43,9 @@ episodes_nb_to_show = [
     min(k * num_episodes // 5, num_episodes - 1) for k in range(10 + 1)
 ]  # show all k*10% episodes
 episodes_nb_to_show = []  # show no episode on terminal
+episodes_nb_to_show = [0, num_episodes - 1]  # show first and last episode
 
-run_params["episodes_nb_to_show"] = (episodes_nb_to_show,)
+run_params["episodes_nb_to_show"] = episodes_nb_to_show
 
 
 viz_params = {

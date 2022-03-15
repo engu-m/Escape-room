@@ -58,6 +58,7 @@ def render_frame(
 
 
 def complete_run(env_params, run_params, agents, agent_params):
+    """complete run of all runs + rooms + episodes"""
     num_runs = run_params["num_runs"]
     rooms = env_params["rooms"]
     rec = StringRecorder()
