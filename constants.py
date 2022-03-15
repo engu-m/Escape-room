@@ -8,7 +8,7 @@ env_params = {
 }
 
 
-agent_info = {
+agent_params = {
     "num_actions": 4,
     "epsilon": 0.1,
     "tuple_state": (env_params["grid_height"], env_params["grid_width"]),
@@ -18,19 +18,20 @@ agent_info = {
 }
 
 agents = {
-    "QLearningAgent": QLearningAgent(agent_init_info=agent_info),
-    "ExpectedSarsa": ExpectedSarsa(agent_init_info=agent_info),
+    "QLearningAgent": QLearningAgent,
+    "ExpectedSarsa": ExpectedSarsa,
 }
 
 fps = 0.2
-num_episodes = 200
+num_episodes = 50
+num_runs = 3
 episodes_nb_to_show = range(10)  # show 10 first episodes
 episodes_nb_to_show = range(num_episodes - 10, num_episodes)  # show 10 last episodes
 episodes_nb_to_show = [0, num_episodes - 1]  # show first and last episodes only
-episodes_nb_to_show = []  # show no episode on terminal
 episodes_nb_to_show = [
     min(k * num_episodes // 5, num_episodes - 1) for k in range(10 + 1)
 ]  # show all k*10% episodes
+episodes_nb_to_show = []  # show no episode on terminal
 
 n_first_episode_visit = 120  # number of first episode visits to show
 n_last_episode_visit = 300  # number of last episode visits to show
@@ -42,18 +43,18 @@ episode_params = {
     "fps": fps,
     "n_first_episode_visit": n_first_episode_visit,
     "n_last_episode_visit": n_last_episode_visit,
-    "save_frames_to_gif": True,
+    "save_frames_to_gif": False,
     "display_on_screen": False,
     "viz_results": False,
-    "viz_params": {
-        "save": False,
-        "show": False,
-        "cmap": "magma",
-        "max_fontsize": 40,
-        "block_show": True,
-    },
 }
 
+viz_params = {
+    "save": False,
+    "show": False,
+    "cmap": "magma",
+    "max_fontsize": 40,
+    "block_show": True,
+}
 
 rooms = [
     (

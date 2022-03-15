@@ -46,26 +46,15 @@ def render_frame(
     return frame
 
 
-def episodes(agent_name, agent, env, run_ratio, **episode_parameters):
+def episodes(agent_name, agent, env, run_ratio, **episode_params):
     """run an episode for the agent in one env/room"""
-    num_episodes = episode_parameters["num_episodes"]
-    episodes_nb_to_show = episode_parameters["episodes_nb_to_show"]
-    fps = episode_parameters["fps"]
-    n_first_episode_visit = episode_parameters["n_first_episode_visit"]
-    n_last_episode_visit = episode_parameters["n_last_episode_visit"]
-    save_frames_to_gif = episode_parameters["save_frames_to_gif"]
-    display_on_screen = episode_parameters["display_on_screen"]
-    viz_results = episode_parameters["viz_results"]
-    viz_params = episode_parameters["viz_params"]
+    num_episodes = episode_params["num_episodes"]
+    episodes_nb_to_show = episode_params["episodes_nb_to_show"]
+    fps = episode_params["fps"]
+    save_frames_to_gif = episode_params["save_frames_to_gif"]
+    display_on_screen = episode_params["display_on_screen"]
 
-    last_state_visits = np.zeros(
-        (n_last_episode_visit, env_params["grid_height"], env_params["grid_width"], 2)
-    )
-    first_state_visits = np.zeros(
-        (n_first_episode_visit, env_params["grid_height"], env_params["grid_width"], 2)
-    )
-    all_episode_rewards = []
-    for episode in tqdm(range(num_episodes)):
+    for episode in tqdm(range(num_episodes), leave=False):
         reward, state, term = env.start()
         action = agent.agent_start(
             (*env.start_loc, 0), seed=episode + num_episodes * int(get_nb_from_ratio(run_ratio))
@@ -97,11 +86,11 @@ def episodes(agent_name, agent, env, run_ratio, **episode_parameters):
             action = agent.agent_step(reward, state)
             episode_reward += reward
 
-            # track visits if necessary
-            if episode < n_first_episode_visit:
-                first_state_visits[(episode, *state)] += 1
-            if episode >= num_episodes - n_last_episode_visit:
-                last_state_visits[(episode - (num_episodes - n_last_episode_visit), *state)] += 1
+            # # track visits if necessary
+            # if episode < n_first_episode_visit:
+            #     first_state_visits[(episode, *state)] += 1
+            # if episode >= num_episodes - n_last_episode_visit:
+            #     last_state_visits[(episode - (num_episodes - n_last_episode_visit), *state)] += 1
 
             if term:
                 if episode in episodes_nb_to_show:
@@ -135,9 +124,7 @@ def episodes(agent_name, agent, env, run_ratio, **episode_parameters):
                                 )
                             ),
                         )
-                all_episode_rewards.append(episode_reward)
                 break
-    return all_episode_rewards
 
 
 def run(run_ratio, agent_name, agent, rooms, episode_params):
@@ -154,9 +141,17 @@ def run(run_ratio, agent_name, agent, rooms, episode_params):
 
 global rec
 rec = StringRecorder()
-dict_all_episode_rewards = {}
-num_runs = 3
-for agent_name, agent in tqdm(agents.items()):
+
+for agent_name, agent_class in tqdm(agents.items()):
     for run_nb in tqdm(range(num_runs)):
+        agent_params["seed"] = run_nb
+        agent = agent_class(agent_params)
         run_ratio = f"{run_nb+1}/{num_runs}"
-        run(run_ratio, agent_name, agent, rooms, episode_params)
+        for room_nb, (room_name, room_params) in enumerate(rooms):
+            # init env
+            env_params["room_params"] = room_params
+            env_params["room_name"] = room_name
+            env_params["room_ratio"] = f"{room_nb+1}/{len(rooms)}"
+            env = EscapeRoomEnvironment(env_params=env_params)
+            # run all episodes
+            episodes(agent_name, agent, env, run_ratio, **episode_params)
