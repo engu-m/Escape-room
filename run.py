@@ -59,7 +59,6 @@ def render_frame(
                         f"run-{get_nb_from_ratio(run_ratio)}_"
                         f"room-{get_nb_from_ratio(env.room_ratio)}_"
                         f"episode-{get_nb_from_ratio(episode_ratio)}"
-                        ".gif"
                     )
                 ),
             )

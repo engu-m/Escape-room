@@ -16,26 +16,20 @@ import PIL.ImageFont
 colors = ["gray", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "crimson"]
 
 
-def get_font(bold=False):
+def get_font():
     font_name = "monospace.medium.ttf"
     font_path = os.path.join(os.path.dirname(__file__), "fonts", font_name)
-    if bold:
-        font_path = font_path.replace("Normal", "Bold")
-
     if not os.path.exists(font_path):
-        raise RuntimeError("run `./Escape-Room-RL/fonts/Consolas.ttf` first")
-
+        raise RuntimeError(f"download font first and put it in {str(font_path)}")
     return font_path
 
 
 class StringRecorder(object):
-    def __init__(self, font=None, bold_font=None, max_frames=100000):
+    def __init__(self, font=None, max_frames=100000):
         self.max_frames = max_frames
         if font is None:
             font = get_font()
-            # bold_font = get_font(bold=True)
         self.font = PIL.ImageFont.truetype(font, size=80)
-        # self.bold_font = PIL.ImageFont.truetype(bold_font or font)
         self.height = -1
         self.width = -1
 
@@ -78,7 +72,6 @@ class StringRecorder(object):
 
         cw, ch = self.tmpdraw.textsize("A", font=self.font, spacing=self._spacing)
 
-        # TODO(kikuchi): refactoring
         for k, v in d.items():
             y, x = k
             background = self.bg_reg.findall(v)
@@ -117,7 +110,7 @@ class StringRecorder(object):
             self.height = height
         self._step += 1
 
-    def make_gif(self, save_path, fps=5):
+    def make_gif(self, save_path, fps=2.5):
         if not save_path.endswith(".mp4"):
             save_path += ".mp4"
         images = []

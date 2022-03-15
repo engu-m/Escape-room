@@ -7,71 +7,6 @@ action_to_emoji = {0: "↑", 1: "←", 2: "↓", 3: "→"}
 
 w, h = 4, 4
 
-env_params = {
-    "grid_width": w,
-    "grid_height": h,
-}
-
-
-agent_params = {
-    "num_actions": 4,
-    "epsilon": 0.1,
-    "grid_shape": (env_params["grid_height"], env_params["grid_width"]),
-    "discount": 1,
-    "step_size": 0.8,
-}
-
-agents = {
-    "QLearningAgent": QLearningAgent,
-    "ExpectedSarsa": ExpectedSarsa,
-}
-
-n_first_episode_visit = 120  # number of first episode visits to show
-n_last_episode_visit = 300  # number of last episode visits to show
-
-run_params = {
-    "num_runs": 3,
-    "num_episodes": 30,
-    "fps": 0.15,
-    "n_first_episode_visit": n_first_episode_visit,
-    "n_last_episode_visit": n_last_episode_visit,
-    "save_frames_to_gif": True,
-}
-
-num_episodes = run_params["num_episodes"]
-
-
-## episodes to show
-episodes_to_show = range(10)  # show 10 first episodes
-episodes_to_show = range(num_episodes - 10, num_episodes)  # show 10 last episodes
-episodes_to_show = [0, num_episodes - 1]  # show first and last episodes only
-episodes_to_show = [
-    min(k * num_episodes // 5, num_episodes - 1) for k in range(10 + 1)
-]  # show all k*10% episodes
-episodes_to_show = [0, num_episodes - 1]  # show first and last episode
-episodes_to_show = [num_episodes - 1]  # show only the last one
-episodes_to_show = []  # show no episode on terminal
-episodes_to_show = product(
-    [1], [0], [6], list(episodes_to_show)
-)  # second agent, first run, 7th room
-
-## episodes to save
-episodes_to_save = [num_episodes - 1]  # save only the last one
-episodes_to_save = product(
-    [0, 1], [0], [6], list(episodes_to_save)
-)  # second agent, first run, 7th room
-
-run_params["episodes_to_show"] = list(episodes_to_show)
-run_params["episodes_to_save"] = list(episodes_to_save)
-
-viz_params = {
-    "save": False,
-    "show": False,
-    "cmap": "magma",
-    "max_fontsize": 40,
-    "block_show": True,
-}
-
 
 rooms = [
     (
@@ -149,7 +84,71 @@ rooms = [
 ]
 
 
-env_params["rooms"] = rooms
+env_params = {"grid_width": w, "grid_height": h, "rooms": rooms}
+
+
+agent_params = {
+    "num_actions": 4,
+    "epsilon": 0.1,
+    "grid_shape": (env_params["grid_height"], env_params["grid_width"]),
+    "discount": 1,
+    "step_size": 0.8,
+}
+
+agents = {
+    "QLearningAgent": QLearningAgent,
+    "ExpectedSarsa": ExpectedSarsa,
+}
+
+n_first_episode_visit = 120  # number of first episode visits to show
+n_last_episode_visit = 300  # number of last episode visits to show
+num_episodes = 30
+num_runs = 3
+
+run_params = {
+    "num_runs": num_runs,
+    "num_episodes": num_episodes,
+    "fps": 0.15,
+}
+
+
+### EPISODES TO SHOW
+episodes_to_show = range(10)  # show 10 first episodes
+episodes_to_show = range(num_episodes - 10, num_episodes)  # show 10 last episodes
+episodes_to_show = [0, num_episodes - 1]  # show first and last episodes only
+episodes_to_show = [
+    min(k * num_episodes // 5, num_episodes - 1) for k in range(10 + 1)
+]  # show all k*10% episodes
+episodes_to_show = [num_episodes - 1]  # show only the last one
+episodes_to_show = [0, num_episodes - 1]  # show first and last episode
+episodes_to_show = []  # show no episode on terminal
+
+# episodes_to_show = product(
+#     [1], [0], [6], list(episodes_to_show)
+# )  # second agent, first run, 7th room
+episodes_to_show = product(
+    range(2), range(1), range(len(rooms)), list(episodes_to_show)
+)  # every agent/room only the first run
+
+### EPISODES TO SAVE
+episodes_to_save = [0, num_episodes - 1]  # save only the last one
+# episodes_to_save = product(
+#     [0, 1], [0], [6], list(episodes_to_save)
+# )  # second agent, first run, 7th room
+episodes_to_save = product(
+    range(2), range(1), range(len(rooms)), list(episodes_to_save)
+)  # every agent/room only the first run
+
+run_params["episodes_to_show"] = list(episodes_to_show)
+run_params["episodes_to_save"] = list(episodes_to_save)
+
+viz_params = {
+    "save": False,
+    "show": False,
+    "cmap": "magma",
+    "max_fontsize": 40,
+    "block_show": True,
+}
 
 
 def get_nb_from_ratio(s: str):
