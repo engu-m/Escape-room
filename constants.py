@@ -1,12 +1,15 @@
 """All constants used in other programs """
+from itertools import product
 
 from agent import ExpectedSarsa, QLearningAgent
 
 action_to_emoji = {0: "↑", 1: "←", 2: "↓", 3: "→"}
 
+w, h = 4, 4
+
 env_params = {
-    "grid_width": 4,
-    "grid_height": 4,
+    "grid_width": w,
+    "grid_height": h,
 }
 
 
@@ -29,10 +32,10 @@ n_last_episode_visit = 300  # number of last episode visits to show
 run_params = {
     "num_runs": 3,
     "num_episodes": 50,
-    "fps": 0,
+    "fps": 0.2,
     "n_first_episode_visit": n_first_episode_visit,
     "n_last_episode_visit": n_last_episode_visit,
-    "save_frames_to_gif": True,
+    "save_frames_to_gif": False,
 }
 
 num_episodes = run_params["num_episodes"]
@@ -47,7 +50,6 @@ episodes_nb_to_show = [0, num_episodes - 1]  # show first and last episode
 
 run_params["episodes_nb_to_show"] = episodes_nb_to_show
 
-
 viz_params = {
     "save": False,
     "show": False,
@@ -55,6 +57,7 @@ viz_params = {
     "max_fontsize": 40,
     "block_show": True,
 }
+
 
 rooms = [
     (
@@ -64,6 +67,18 @@ rooms = [
             "key_location": None,
             "agent_location": "top-right",
             "obstacle_locations": [],
+            "need_key": False,
+        },
+    ),
+    (
+        "No key corridor",
+        {
+            "door_location": "top-middle",
+            "key_location": None,
+            "agent_location": "bottom-middle",
+            "obstacle_locations": list(
+                product(range(h), list(range(w // 2)) + list(range(w // 2 + 1, w)))
+            ),
             "need_key": False,
         },
     ),
@@ -83,7 +98,7 @@ rooms = [
             "door_location": "top-middle",
             "key_location": None,
             "agent_location": "bottom-middle",
-            "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-left"],
+            "obstacle_locations": [(1, w // 2), "top-left", "bottom-left"],
             "need_key": False,
         },
     ),
@@ -93,7 +108,7 @@ rooms = [
             "door_location": "top-middle",
             "key_location": None,
             "agent_location": "bottom-middle",
-            "obstacle_locations": [(1, 4 // 2), "top-left", "bottom-right"],
+            "obstacle_locations": [(1, w // 2), "top-left", "bottom-right"],
             "need_key": False,
         },
     ),
@@ -113,7 +128,7 @@ rooms = [
             "door_location": "top-left",
             "key_location": "bottom-right",
             "agent_location": "bottom-middle",
-            "obstacle_locations": [(1, 4 // 2), "top-right", "bottom-left"],
+            "obstacle_locations": [(1, w // 2), "top-right", "bottom-left"],
             "need_key": True,
         },
     ),
