@@ -19,7 +19,7 @@ def save_and_show():
         def inner(*args, **viz_args):
             figtitle = func(*args, **viz_args)
             if viz_args.get("save", False):
-                save_path = str(viz_args.get("save_directory", "./") / figtitle)
+                save_path = str(viz_args.get("save_directory", "./") / figtitle.replace(" ", "_"))
                 plt.savefig(save_path, bbox_inches="tight", transparent=True)
             if viz_args.get("show", False):
                 plt.show(block=viz_args.get("block_show", False))
@@ -54,7 +54,7 @@ def plot_mutliple_agents_reward(dict_all_run_rewards, **viz_args):
 
 
 @save_and_show()
-def plot_q_value_estimation(q_value, n_runs, **viz_args):
+def plot_q_value_estimation(q_value, nb_episodes, **viz_args):
     fig, ax = plt.subplots(2, 4)
     for action in range(4):
         for got_key in range(2):
@@ -64,13 +64,13 @@ def plot_q_value_estimation(q_value, n_runs, **viz_args):
             ax[got_key, action].set_title(f"{action_to_emoji[action]}" + got_key * " - got_key")
             ax[got_key, action].set_xticks([])
             ax[got_key, action].set_yticks([])
-    fig.suptitle(f"Q value estimation after {n_runs} runs")
+    fig.suptitle(f"Q value estimation after {nb_episodes} episodes")
     fig.tight_layout()
-    return f"Q value estimation after {n_runs}"
+    return f"Q value estimation after {nb_episodes} episodes"
 
 
 @save_and_show()
-def plot_best_action_per_state(q_value, n_runs, **viz_args):
+def plot_best_action_per_state(q_value, nb_episodes, **viz_args):
     fig, ax = plt.subplots(1, 2)
     # process best value arrays
     best_action_value = np.max(q_value, axis=-1)
@@ -106,7 +106,7 @@ def plot_best_action_per_state(q_value, n_runs, **viz_args):
                     )
                     txt.set_path_effects([PathEffects.withStroke(linewidth=1, foreground="black")])
 
-    figtitle = f"Q value best actions after {n_runs} runs"
+    figtitle = f"Q value best actions after {nb_episodes} episodes"
     fig.suptitle(figtitle)
     return figtitle
 
@@ -128,7 +128,6 @@ def plot_n_extreme_visits(all_state_visits, n_runs, first_or_last="last", **viz_
     )
     plt.axis("off")
 
-    cm = plt.get_cmap()
     plt.subplots_adjust(bottom=0.05, top=0.8, right=0.75, left=0.05)
     cax = plt.axes([0.82, 0.05, 0.075, 0.75])
     cbar = plt.colorbar(cax=cax)

@@ -119,8 +119,8 @@ episodes_to_show = [0, num_episodes - 1]  # show first and last episodes only
 episodes_to_show = [
     min(k * num_episodes // 5, num_episodes - 1) for k in range(10 + 1)
 ]  # show all k*10% episodes
-episodes_to_show = [num_episodes - 1]  # show only the last one
 episodes_to_show = [0, num_episodes - 1]  # show first and last episode
+episodes_to_show = [num_episodes - 1]  # show only the last one
 episodes_to_show = []  # show no episode on terminal
 
 # episodes_to_show = product(
@@ -132,6 +132,7 @@ episodes_to_show = product(
 
 ### EPISODES TO SAVE
 episodes_to_save = [0, num_episodes - 1]  # save only the last one
+episodes_to_save = []  # save no episode
 # episodes_to_save = product(
 #     [0, 1], [0], [6], list(episodes_to_save)
 # )  # second agent, first run, 7th room
