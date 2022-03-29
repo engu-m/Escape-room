@@ -12,30 +12,34 @@ import PIL.ImageColor
 import PIL.ImageDraw
 import PIL.ImageFont
 
+# get monokai colors from https://marketplace.visualstudio.com/items?itemName=SuperPaintman.monokai-extended#colors
+colors = [
+    "#75715E",  # gray
+    "#F92672",  # red
+    "#A6E22E",  # green
+    "#E6DB74",  # yellow
+    "#66D9EF",  # blue
+    "magenta",
+    "cyan",
+    "white",
+    "crimson",
+]
 
-colors = ["gray", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "crimson"]
 
-
-def get_font(bold=False):
+def get_font():
     font_name = "monospace.medium.ttf"
     font_path = os.path.join(os.path.dirname(__file__), "fonts", font_name)
-    if bold:
-        font_path = font_path.replace("Normal", "Bold")
-
     if not os.path.exists(font_path):
-        raise RuntimeError("run `./Escape-Room-RL/fonts/Consolas.ttf` first")
-
+        raise RuntimeError(f"download font first and put it in {str(font_path)}")
     return font_path
 
 
 class StringRecorder(object):
-    def __init__(self, font=None, bold_font=None, max_frames=100000):
+    def __init__(self, font=None, max_frames=100000):
         self.max_frames = max_frames
         if font is None:
             font = get_font()
-            # bold_font = get_font(bold=True)
         self.font = PIL.ImageFont.truetype(font, size=80)
-        # self.bold_font = PIL.ImageFont.truetype(bold_font or font)
         self.height = -1
         self.width = -1
 
@@ -78,7 +82,6 @@ class StringRecorder(object):
 
         cw, ch = self.tmpdraw.textsize("A", font=self.font, spacing=self._spacing)
 
-        # TODO(kikuchi): refactoring
         for k, v in d.items():
             y, x = k
             background = self.bg_reg.findall(v)
@@ -99,14 +102,11 @@ class StringRecorder(object):
                 color = PIL.ImageColor.getrgb(colors[int(foreground[0][1])])
                 char = parsed[y][x][0][1]
 
-                font = self.font
-                # if foreground[0].endswith(";1"):
-                # font = self.bold_font
-                draw.text((cw * x, ch * y), char, font=font, fill=color, spacing=self._spacing)
+                draw.text((cw * x, ch * y), char, font=self.font, fill=color, spacing=self._spacing)
 
         return image, size
 
-    def record_frame(self, frame, speed=None):
+    def record_frame(self, frame):
         assert type(frame) == str
 
         image, (width, height) = self.render(frame=frame)
@@ -117,17 +117,17 @@ class StringRecorder(object):
             self.height = height
         self._step += 1
 
-    def make_gif(self, save_path, speed=0.3):
-        if not save_path.endswith(".gif"):
-            save_path += ".gif"
-
+    def make_video(self, save_path, fps=2.5):
+        if not save_path.endswith(".mp4"):
+            save_path += ".mp4"
         images = []
         for img in self._images:
             image = PIL.Image.new("RGB", (self.width, self.height), "#f8f8f2")
             image.paste(img, box=(0, 0))
+            image = image.resize((688, 784))  # to avoid warning
             images.append(numpy.asarray(image))
 
-        imageio.mimsave(save_path, images, duration=speed)
+        imageio.mimsave(save_path, images, fps=fps)
         self.reset()
 
     @property

@@ -5,7 +5,7 @@ import numpy as np
 
 
 class BaseAgent:
-    def __init__(self, agent_init_info) -> None:
+    def __init__(self, agent_params) -> None:
         """Setup for the agent called when the experiment first starts.
 
         Args:
@@ -20,17 +20,17 @@ class BaseAgent:
 
         """
         # Store the parameters provided in agent_init_info.
-        self.num_actions = agent_init_info["num_actions"]
-        self.tuple_state = agent_init_info["tuple_state"]
-        self.num_states_x, self.num_states_y = self.tuple_state
-        self.epsilon = agent_init_info["epsilon"]
-        self.step_size = agent_init_info["step_size"]
-        self.discount = agent_init_info["discount"]
-        self.rand_generator = np.random.RandomState(agent_init_info["seed"])
+        self.num_actions = agent_params["num_actions"]
+        self.grid_shape = agent_params["grid_shape"]
+        self.num_states_x, self.num_states_y = self.grid_shape
+        self.epsilon = agent_params["epsilon"]
+        self.step_size = agent_params["step_size"]
+        self.discount = agent_params["discount"]
+        self.rand_generator = np.random.RandomState(agent_params["seed"])
         self.rewards = [0]
 
         # num_states_x (height), num_states_y (width), got_key or not (2), num_actions (4)
-        self.q = np.zeros((*self.tuple_state, 2, self.num_actions))
+        self.q = np.zeros((*self.grid_shape, 2, self.num_actions))
 
     def agent_start(self, state, seed):
         """The first method called when the episode starts, called after
@@ -82,8 +82,8 @@ class BaseAgent:
 
 
 class QLearningAgent(BaseAgent):
-    def __init__(self, agent_init_info) -> None:
-        super().__init__(agent_init_info)
+    def __init__(self, agent_params) -> None:
+        super().__init__(agent_params)
 
     def agent_step(self, reward, state):
         """A step taken by the agent.
@@ -118,8 +118,8 @@ class QLearningAgent(BaseAgent):
 
 
 class ExpectedSarsa(BaseAgent):
-    def __init__(self, agent_init_info) -> None:
-        super().__init__(agent_init_info)
+    def __init__(self, agent_params) -> None:
+        super().__init__(agent_params)
 
     def agent_step(self, reward, state):
         """A step taken by the agent.
