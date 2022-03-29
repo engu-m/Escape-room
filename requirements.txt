@@ -1,0 +1,7 @@
+gym
+numpy
+pillow
+imageio
+tqdm
+keyboard
+imageio-ffmpeg
