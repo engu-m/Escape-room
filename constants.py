@@ -119,9 +119,9 @@ episodes_to_show = [0, num_episodes - 1]  # show first and last episodes only
 episodes_to_show = [
     min(k * num_episodes // 5, num_episodes - 1) for k in range(10 + 1)
 ]  # show all k*10% episodes
-episodes_to_show = [0, num_episodes - 1]  # show first and last episode
 episodes_to_show = [num_episodes - 1]  # show only the last one
 episodes_to_show = []  # show no episode on terminal
+episodes_to_show = [0, num_episodes - 1]  # show first and last episode
 
 # episodes_to_show = product(
 #     [1], [0], [6], list(episodes_to_show)
@@ -131,14 +131,14 @@ episodes_to_show = product(
 )  # every agent/room only the first run
 
 ### EPISODES TO SAVE
-episodes_to_save = [0, num_episodes - 1]  # save only the last one
 episodes_to_save = []  # save no episode
 # episodes_to_save = product(
 #     [0, 1], [0], [6], list(episodes_to_save)
 # )  # second agent, first run, 7th room
 episodes_to_save = product(
-    range(2), range(1), range(len(rooms)), list(episodes_to_save)
-)  # every agent/room only the first run
+    [1], [1, 2], range(len(rooms)), list(episodes_to_save)
+)  # second agent/room run 2+3
+episodes_to_save = [0, num_episodes - 1]  # save only the last one
 
 run_params["episodes_to_show"] = list(episodes_to_show)
 run_params["episodes_to_save"] = list(episodes_to_save)

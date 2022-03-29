@@ -110,10 +110,10 @@ def complete_run(env_params, run_params, agents, agent_params):
 
                     iteration += 1
                     # iterate
+                    save = (agent_nb, run_nb, room_nb, episode) in episodes_to_save
+                    show = (agent_nb, run_nb, room_nb, episode) in episodes_to_show
                     while True:
                         # record episode
-                        save = (agent_nb, run_nb, room_nb, episode) in episodes_to_save
-                        show = (agent_nb, run_nb, room_nb, episode) in episodes_to_show
                         if save or show:
                             episode_ratio = f"{episode+1}/{num_episodes}"
                             render_frame(
