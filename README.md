@@ -1,4 +1,4 @@
-# Escape-Room-RL
+# Escape Room 🔐
 This repositories holds the environment and the agent implementations of a simple escape room as well as several learning strategies.
 
 This project is hosted at [https://github.com/Mentel1/Escape-Room-RL](https://github.com/Mentel1/Escape-Room-RL).
